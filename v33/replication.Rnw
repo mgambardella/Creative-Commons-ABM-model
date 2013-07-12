@@ -1,0 +1,214 @@
+\documentclass{scrartcl}
+\usepackage{xcolor}
+\usepackage{textcomp}
+\begin{document}
+\section{Setup}
+For the replication of the data we need all the code written for the first replication attempt. % todo: clean up and put in file calibration.Rnw
+
+<<>>=
+include <- function(components, ...) {
+  for(module in components) {
+    Stangle(paste(module, "Rnw", sep="."), ...);
+    source(paste(module, "R", sep="."), ...);
+  }
+}
+@ 
+
+<<>>=
+include(c("model", "calibration"));
+@ 
+
+\section{Benchmark}
+
+On our original database we have the situation showed in table \ref{situation}:
+
+\begin{table}\label{situation}
+  \begin{tabular}{|l|ccc|}
+\hline
+Year \& Status & & Openness &\\    
+ &    (1 & 1.5  &   2)\\
+\hline
+\hline
+2003      & & & \\
+       For Profit &   &       2 &    1\\
+        Non Profit & & &\\
+\hline
+2004      & & & \\
+        For Profit &    1  &   1 &    2\\
+        Non Profit &       &   8  &   \\ 
+\hline
+2005      & & & \\
+        For Profit &       &   6  &   3\\
+        Non Profit   & &      14   &  1\\
+\hline
+2006      & & & \\
+        For Profit & &        19  &  29\\
+        Non Profit & &        8 &    7\\
+\hline
+2007      & & & \\
+        For Profit & &        15  &  56 \\
+        Non Profit & &        11 &   18\\
+\hline
+2008      & & & \\
+        For Profit &    &      9 &   45\\
+        Non Profit &   &      19  &  23\\
+\hline
+2009      & & & \\
+        For Profit & &        14  &  49\\
+        Non Profit & &         19  &  13\\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Replication}
+The types of participants with which the population is constituted is the same for every year.
+
+<<>>=
+pop03 <- set.population(100,
+                        expand.grid(famous = c(TRUE, FALSE),
+                                    com = c(TRUE, FALSE),
+                                    maturity = 1:10),
+                        list(own,effort,notoriety,diffusion,control,
+                             status,skip),
+                        replace = TRUE);
+@ 
+
+By the way, perhaps the appropriate population size is the number of rows of expand.grid. That is, every combinations of characteristics exactly once.
+
+\subsection{2003}
+200 steps is sufficient, it would seem.
+Parallelization: there is a variable \verb@parallel@, which allows us to specify how many ``threads'' to run in parallel (default 1). There is also another parameter \verb@MPI@ to be explored. 
+
+Notes that parallelism requires library ``multicore'' or ``mpi''.
+<<>>=
+require(multicore);
+@
+
+<<2003>>=
+sel03 <- run.irace(population = pop03, budget = 2000,
+                   common.settings = 
+                   "s \"\" i (10, 200)\nr \"\" i (10, 100)",
+                   log.file = "boucle-2003.log",
+                   parallel = 2);
+write.csv(sel03, file = "boucle-2003.csv");
+@ 
+
+\subsection{2004}
+
+<<2004>>=
+start.2004 <- instantiate.model(sel03[sample(nrow(sel03), 
+                                             100, replace = TRUE),], 
+                                population = pop03);
+instances.2004 <- get.stores(start.2004);
+sel04 <- run.irace(population = pop03, store.base = instances.2004,
+                   objective = c(1,1,2,0,8,0), budget = 2000, 
+                   common.settings = "s \"\" i (10, 200)\nr \"\" i (10, 100)",
+                   log.file = "boucle-2004.log");
+write.csv(sel04, file= "boucle-2004.csv");
+@
+
+\subsection{2005}
+Let's increase the number of actions to be taken.
+<<2005>>=
+start.2005 <- instantiate.model(sel03[sample(nrow(sel04), 
+                                             100, replace = TRUE),], 
+                                population = pop03);
+sel05 <- run.irace(population = pop03, 
+                   store.base = get.stores(start.2005),
+                   objective = c(0,6,3,0,14,1), budget = 2000, 
+                   common.settings = "s \"\" i (10, 500)\nr \"\" i (10, 100)",
+                   log.file = "boucle-2005.log");
+write.csv(sel05, file="boucle-2005.csv");
+@ 
+
+\subsection{2006}
+<<2006>>=
+start.2006 <- instantiate.model(sel03[sample(nrow(sel05), 
+                                             100, replace = TRUE),], 
+                                population = pop03);
+sel06 <- run.irace(population = pop03, 
+                   store.base = get.stores(start.2006),
+                   objective = c(0,19,29,0,8,7), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)",
+                   log.file = "boucle-2006.log");
+write.csv(sel06, file = "boucle-2006.csv");
+@
+
+\subsection{2007}
+<<2007>>=
+start.2007 <- instantiate.model(sel03[sample(nrow(sel06), 
+                                             100, replace = TRUE),], 
+                                population = pop03);
+sel07 <- run.irace(population = pop03, 
+                   store.base = get.stores(start.2007),
+                   objective = c(0,15,56,0,11,18), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)",
+                   log.file = "boucle-2007.log");
+write.csv(sel07, file = "boucle-2007.csv");
+@
+
+\subsection{2008}
+<<2008>>=
+start.2008 <- instantiate.model(sel03[sample(nrow(sel07), 
+                                             100, replace = TRUE),], 
+                                population = pop03);
+sel08 <- run.irace(population = pop03, 
+                   store.base = get.stores(start.2008),
+                   objective = c(0,9,45,0,19,23), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)",
+                   log.file = "boucle-2008.log");
+write.csv(sel08, file = "boucle-2008.csv");
+@
+
+\subsection{2009}
+<<2009>>=
+start.2009 <- instantiate.model(sel03[sample(nrow(sel08), 
+                                             100, replace = TRUE),], 
+                                population = pop03);
+sel09 <- run.irace(population = pop03, 
+                   store.base = get.stores(start.2009),
+                   objective = c(0,14,49,0,19,13), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)",
+                   log.file = "boucle-2009.log");
+write.csv(sel09, file = "boucle-2009.csv");
+@
+
+\subsection{Validation}
+
+
+<<eval=FALSE>>=
+b3 <- read.csv("boucle-2003.csv")
+dim(b3)
+b4 <- read.csv("boucle-2004.csv")
+b5 <- read.csv("boucle-2005.csv")
+names(b3)
+source("replication.R")
+pop03 <- set.population(100,
+                        expand.grid(famous = c(TRUE, FALSE),
+                                    com = c(TRUE, FALSE),
+                                    maturity = 1:10),
+                        list(own,effort,notoriety,diffusion,control,
+                             status,skip),
+                        replace = TRUE);
+m3 <- instantiate.model(b3, population = pop03, run=F)
+
+test(m3[[1]], b3[1,"s"], participant.names = paste("p", 1:100,sep=""))
+r3 <- test(m3[[1]], b3[1,"s"], participant.names = paste("p", 1:100,sep=""))
+m4 <- instantiate.model(b4, population = pop03, run=F)
+m5 <- instantiate.model(b5, population = pop03, run=F)
+m3s1 <- instantiate.model(b3[1,], population = pop03)
+m4s1 <- instantiate.model(b3[1,], population = pop03, store.base=m3s1$store)
+m3s1$store
+m3s1
+m3s1[[1]]$store
+m4s1 <- instantiate.model(b3[1,], population = pop03, store.base=m3s1[[1]]$store)
+r4 <- test(m4[[1]], b4[1,"s"], participant.names = paste("p", 1:100,sep=""), store.base=m3s1[[1]]$store)
+test
+r4 <- test(m4[[1]], b4[1,"s"], participant.names = paste("p", 1:100,sep=""), initial.store=m3s1[[1]]$store)
+r4 <- test(m4[[1]], b4[1,"s"], participant.names = paste("p", 1:100,sep=""), initial.store=m3s1[[1]]$store)
+r5 <- test(m5[[1]], b5[1,"s"], participant.names = paste("p", 1:100,sep=""), initial.store=m4s1[[1]]$store)
+apply(r5, 1, sum)
+
+@ 
+
+\end{document}

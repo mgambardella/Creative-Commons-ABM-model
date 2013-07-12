@@ -1,0 +1,1102 @@
+\documentclass{scrartcl}
+\usepackage{xcolor}
+\usepackage{textcomp}
+
+\begin{document}
+
+\section{Introduction}
+The model is used as a tool to help generate hypotheses about what might have been the process yielding the results we observe. 
+
+The model itself defines the structure of the process. In our case, participants with given preferences are selected randomly to provide new ideas or add to existing ideas.
+
+Our hypotheses concern the preferences and characteristics of the participants.
+In order to explore a range of assumptions which might lead to the desired outcome, we run simulations of the model with different instantiations of these preferences and characteristics. In order to choose among these assumptions we compare the outcomes of multiple runs and selected the assumptions which on average yield the outcome closest to what we observe in our benchmark.
+
+Our benchmark spans several periods. For each period we can imagine the likely preferences and characteristics of participants based on our intuition and corroborated by the model output. Based on these exercises for each period, we can then reconstruct the likely evolution of preferences and characteristics among participants. 
+
+
+\section{Benchmark}
+
+On our original database we have the situation showed in table \ref{situation}:
+
+\begin{table}\label{situation}
+  \begin{tabular}{|l|ccc|}
+\hline
+Year \& Status & & Openness &\\    
+ &    (1 & 1.5  &   2)\\
+\hline
+\hline
+2003      & & & \\
+       For Profit &   &       2 &    1\\
+        Non Profit & & &\\
+\hline
+2004      & & & \\
+        For Profit &    1  &   1 &    2\\
+        Non Profit &       &   8  &   \\ 
+\hline
+2005      & & & \\
+        For Profit &       &   6  &   3\\
+        Non Profit   & &      14   &  1\\
+\hline
+2006      & & & \\
+        For Profit & &        19  &  29\\
+        Non Profit & &        8 &    7\\
+\hline
+2007      & & & \\
+        For Profit & &        15  &  56 \\
+        Non Profit & &        11 &   18\\
+\hline
+2008      & & & \\
+        For Profit &    &      9 &   45\\
+        Non Profit &   &      19  &  23\\
+\hline
+2009      & & & \\
+        For Profit & &        14  &  49\\
+        Non Profit & &         19  &  13\\
+\hline
+\end{tabular}
+\end{table}
+
+We try to replicate the data of this table using our model.
+<<>>=
+Stangle("model.Rnw");
+source("model.R");
+@ 
+\section{2003}
+
+Alex Jones - FP - Famous - Closed - Works only on own ideas
+
+Alex Jones selects one among {CC by-sa-nc; CC by-nd-nc; CC by-nc} of his own ideas. He needs at least one endorsement of a member of the public to validate the idea. This member of the public is reticent to introduce own ideas.
+
+Alex Jones is primarily interested his own ideas.
+<<>>=
+own <- function(idea, ...) {
+  return(inverse.flag.value(idea$meta$public));
+}
+@ 
+
+Moreover, he likes to keep control and therefore a restrictive production licences.
+<<>>=
+control <- function(idea, ...) {
+  return(ifelse(is.null(idea$meta$licence), 1, 
+                1 + (3-idea$meta$licence$openness.diffusion())/3));
+}
+@
+
+Here is how Alex evaluates his own ideas:
+<<>>=
+own.ideas <- generate.ideas()
+sapply(own.ideas, function(x) {
+  if(is.null(x$meta$licence)) {
+    return(NA);
+  } else {
+    return(x$meta$licence$type());
+  }
+});
+utility(own.ideas, list(factors=list(own, control), a=c(0.5, 0.5)))
+@ 
+
+The utility he assigns to ideas of others is always less than to his own.
+<<>>=
+for(i in own.ideas) { i$meta$public <- TRUE}
+utility(own.ideas, list(factors=list(own, control), a=c(0.5, 0.5)))
+@ 
+
+Alex Jones is famous and for-profit and sure of his choice. Furthermore his ideas do not need many contributions in order to mature.
+<<>>=
+aj <- Participant$new(characteristics=list(famous=TRUE, com=TRUE, 
+                        rationality = 100,
+                        maturity=1, id="Alex Jones"), 
+                      preferences=list(factors=list(own, control), 
+                        a = c(0.5, 0.5)));
+@
+
+
+Giant Jerk - FP - non-famous - open - requires more contributions than Jones.
+ - interested in effort / generativity.
+Moreover Giant Jerk is relatively insecure.
+<<>>=
+gj <- Participant$new(characteristics = list(famous = FALSE, com = TRUE,
+                        maturity = 2, id = "Giant Jerk", rationality = 50),
+                      preferences = list(factors = list(effort, generativity),
+                        a = c(0.5, 0.5)));
+@ 
+
+ 
+Now we can a construct a platform that consists of these two actors only.
+<<>>=
+p <- Platform$new();
+p$population <- list(aj, gj);
+@ 
+
+In order to simulate the evolution of the model it suffices to let it \verb@run@ for a specified number of steps. Activate tracing in order to obtain information on the run-time behavior.
+
+<<>>=
+trace.contributions(TRUE);
+p$run(10);
+trace.contributions(FALSE);
+@ 
+
+In the current setup both Alex Jones and Giant Jerk consistently prefer their own ideas, but since Giant Jerk is insecure occasionally he contributes to an idea of Jones as well.
+
+Redefine the function \verb@wrap@ in order to display the information of interest.
+<<>>=
+wrap <- function(output, 
+                 licence.types = sapply(available.licences, 
+                   function(x) x$type())) {
+  if(length(output$step) > 0) {
+    return(summary(factor(sapply(output$element, 
+                                 function(x) {
+                                   x$meta$licence$type();
+                                 }), levels = licence.types)));
+  } else {
+    invisible(numeric(length(licence.types)));
+  }
+}
+@ 
+
+ 
+
+The function \verb@wrap@ transforms the output of the model run into a count of mature ideas per licence.
+<<>>=
+wrap(p$run(10));
+@ 
+
+We can do something more fancy as well:
+
+<<>>=
+# TODO: would be nice if model output included a model summary
+table.wrap <- function(output,
+                       exclude.zero = TRUE,
+                       licence.types = sapply(available.licences, 
+                         function(x) x$type())) {
+  
+  if(length(output$step) > 0) {
+    licences <- factor(sapply(output$element,
+                              function(x) {
+                                x$meta$licence$type();
+                              }), 
+                       levels = licence.types);
+    authors <- factor(sapply(output$element,
+                             function(x) {
+                               x$meta$author$id;
+                             }));
+    if(exclude.zero) {
+      return(table(licences, authors, 
+                   exclude = names(which(summary(licences)==0))));
+    } else {
+      return(table(licences, authors)); 
+    }
+  } else {
+    return(NA);
+  }
+}
+@
+
+
+<<>>=
+pout <- p$run(100);
+table.wrap(pout);
+table.wrap(pout, exclude.zero = FALSE);
+@ 
+
+We can even write the table to HTML or \LaTeX.
+<<>>=
+require(xtable);
+print(xtable(table.wrap(pout)), floating=FALSE, file="t1.tex");
+@ 
+
+\begin{table}
+  \centering
+  \input{t1}
+  \caption{Summary of model run output}
+\end{table}
+In order to test the model slightly more rigorously we repeat the simulation run several times. The function \verb@test@ runs the simulation for a specified number of times (10 by default). Before each run the platform store of ideas is returned to its initial state.
+<<>>=
+test <- function(platform, steps, times = 10, initial.store = list()) {
+  return(sapply(1:times,
+                function(i) {
+                  platform$store <- initial.store;
+                  return(wrap(platform$run(steps)));
+                }));
+}
+@
+
+Let's run a test.
+First turn off the tracing.
+<<>>=
+trace.contributions(FALSE);
+@ 
+
+Let's simulate the model for 15 steps and repeat this ten times.
+<<>>=
+test(p, 20, 10);
+@ 
+
+It appears Giant Jerk is pursuing his own ideas quite more often than in our benchmark. What if he were less sure of himself?
+
+<<>>=
+gj$characteristics$sure <- 10;
+test(p, 20, 10);
+@ 
+
+That doesn't help much. Maybe there are other ways. What if, Giant Jerk is relatively sure of himself, but has ideas that need a lot more effort to reach maturity?
+<<>>=
+gj$characteristics$sure <- 50;
+gj$characteristics$maturity <- 3;
+test(p, 20, 10);
+@ 
+
+That mainly seems to increase the time it takes for any idea to reach maturity.
+
+Perhaps it is just a matter of preferences. Perhaps Big Jerk really prefers much more contributing to an idea that is already nearly mature.
+<<>>=
+gj$characteristics$maturity <- 2;
+gj$preferences$a <- c(0.9, 0.1)
+test(p, 20, 10);
+@ 
+This is already getting closer.
+
+Finally, it could be that there is a third unobserved actor ``lambda'' playing along.
+
+lambda - interested in notoriety, effort, diffusion, no inspiration (i.e. no own ideas)
+
+Lambda is interested in yet other aspects of ideas than the Alex Jones and Giant Jerk.
+<<>>=
+diffusion <- function(idea, ...) {
+  return(ifelse(is.null(idea$meta$licence), 1, 
+                1+idea$meta$licence$openness.diffusion()/3));
+}
+public <- function(idea, ...) {
+  return(flag.value(idea$meta$public));
+}
+@ 
+
+Now we create participant lambda.
+<<>>=
+lambda <- Participant$new(characteristics = list(famous = FALSE, com = FALSE,
+                            maturity = 10, id = rname("L"), rationality = 50),
+                          preferences = list(factors = 
+                            list(notoriety, effort, diffusion, public),
+                            a = rep(1/4, 4)));
+@ 
+
+And add lamda to the population on the platform.
+<<>>=
+p$population <- list(aj, gj, lambda);
+@ 
+We reset Giant Jerk's preference to the original.
+<<>>=
+gj$preferences$a <- c(0.5, 0.5);
+@ 
+
+And run a simulation.
+<<>>=
+trace.contributions(TRUE);
+p$run(10);
+@ 
+
+And test it.
+<<>>=
+trace.contributions(FALSE);
+test(p, 20, 10);
+@ 
+
+The productivity of this systems seems higher, so we can reduce the number of steps.
+
+<<>>=
+test(p, 10, 10)
+@ 
+
+Now, it appears that Lambda looks too favourable on the ideas of Giant Jerk. How about changing the preferences? 
+<<>>=
+lambda$preferences$a <- c(.5, .1, .3, .1)
+test(p,10,10);
+@ 
+
+We can also increase the relative proportion of lambda-type participants.
+<<>>=
+p$population <- list(aj, gj, lambda, lambda)
+@ 
+
+This doesn't seem to improve the efficiency of the process.
+<<>>=
+test(p, 10, 10);
+test(p, 15, 10);
+@ 
+
+In the end, it might be simpler to discard participant lambda, though.
+<<>>=
+p$population <- list(aj, gj);
+wrap(p$run(20));
+@
+
+Note that not all ideas reach maturity. Quit a number are waiting for contributions.
+<<>>=
+ideas.2003 <- p$store;
+length(ideas.2003);
+wrap(list(step=1:10, element=ideas.2003))
+@ 
+
+\subsection{irace}
+
+Use package \verb@irace@.
+
+<<>>=
+require(irace);
+@
+
+Define the parameter space
+<<>>=
+# see /Library/Frameworks/R.framework/Versions/2.15/Resources/library/irace/templates
+
+parameter.space <- '
+s "" i (10, 100)
+r "" i (10, 100)'
+
+par <- readParameters(text=parameter.space);
+@ 
+
+Instances in this context refer to the initial state of the platform. More specifically they specifiy the contents of the platform store. The easiest is to start with an empty store. The instances are referred to by names. The function \verb@set.store@ returns to appropriate store-contents for each name.
+<<>>=
+set.store <- function(store.id = "empty") {
+  return(list());
+}
+@ 
+
+
+Define the wrapper. The function \verb@simulate@ is called by the \verb@race@ procedure.
+
+<<>>=
+hook.run <- function(instance, candidate, 
+                     extra.params = NULL, config = list()) {
+  p$store <- set.store(instance);
+  for(a in p$population) {
+    a$characteristics$rationality <- as.numeric(candidate$values[["r"]]);
+  }
+  pout <- p$run(as.numeric(candidate$values[["s"]]));
+  return(evaluate(pout));
+}
+@ 
+
+<<>>=
+evaluate <- function(output, target = c(0, 2, 1, 0, 0, 0)) {
+  precis <- function(list, fun, levels) {
+    return(summary(factor(sapply(list, fun), levels = levels)));
+  }
+  my.openness <- function(x) {
+    return(x$meta$licence$openness.production());
+  }
+  
+  output.status <- precis(output$element, status, 1:2);
+  output.openness <- precis(output$element, my.openness, 1:3);
+  
+  target.status <- sapply(split(target, ceiling(1:6/3)), sum);
+  target.openness <- sapply(split(target, rep(1:3, 2)), sum);
+  
+  
+  return(sum(abs(target.openness - output.openness)) +
+         sum(abs(target.status - output.status)));
+}
+@ 
+
+Now we are ready to run the race.
+<<eval=false>>=
+result <- irace(tunerConfig = list(
+                       hookRun = hook.run,
+                       instances = rep("empty", 10),
+                       maxExperiments = 100,
+                       logFile = ""),
+                     parameters = par)
+@ 
+
+
+\subsection{Advanced iRace}
+This time we'd like to test a slightly richer parameter space. In particular we'd like to test various weights given to the factors that Alex Jones and Giant Jerk find important.
+
+For starters we can specify a different degree of rationality to both actors. Furthermore we can vary the weights they assign to the factors of the idea that they take into account.
+
+<<>>=
+par2 <- readParameters(text='
+s "" i (10, 100)
+rAJ "" i (10, 100)
+rGJ "" i (10, 100)
+a1AJ "" r (0, 1)
+a1GJ "" r (0, 1)'
+                        );
+@ 
+
+We make sure only Alex Jones and Giant Jerk are present on the platform.
+
+<<>>=
+p$population <- list(aj, gj);
+@ 
+
+And we translate the parameters into candidate configurations.
+
+<<>>=
+hook.run2 <- function(instance, candidate, 
+                      extra.params = NULL, config = list()) {
+  p$store <- set.store(instance);
+  aj$characteristics$rationality <- as.numeric(candidate$values[["rAJ"]]);
+  gj$characteristics$rationality <- as.numeric(candidate$values[["rGJ"]]);
+  a1AJ <- as.numeric(candidate$values[["a1AJ"]]);
+  a1GJ <- as.numeric(candidate$values[["a1GJ"]]);
+  aj$preferences$a[1] <- a1AJ;
+  aj$preferences$a[2] <- 1 - a1AJ;
+  gj$preferences$a[1] <- a1GJ;
+  gj$preferences$a[2] <- 1 - a1GJ;
+  pout <- p$run(as.numeric(candidate$values[["s"]]));
+  return(evaluate(pout));
+}
+@ 
+
+And we run again (or at least we could):
+
+<<eval=false>>=
+result2 <- irace(tunerConfig = list(
+                       hookRun = hook.run2,
+                       instances = rep("empty", 10),
+                       maxExperiments = 500,
+                       logFile = ""),
+                     parameters = par2)
+@
+
+
+\subsection{Further analysis (writing results to CSV)}
+Now that we have the results we set them asside to be analysed later.
+
+<<eval=false>>=
+# to csv:
+write.csv(result, file="irace1.csv");
+# to latex
+print(xtable(result), floating=FALSE, file="irace1.tex");
+@ 
+
+%\begin{table}
+%  \caption{The first irace results}
+%  \input{irace1}
+%\end{table}
+
+\subsection{Less specific parameters}
+
+We want to be able to tell \verb@irace@ about the models to be explored in more general terms. That is, we want to be able to specify a population size, indicate the characteristics of the members of that population and provide of list of factors that these members take into account when they decide to contribute (or not) to a given idea. We leave it to \verb@irace@ to choose the weights associated with each factor for each member.
+
+The first step is to specify the parameter space for a population of size $n$ which considers $m$ factors in the utility function. The range of values that \verb@irace@ is asked to explore is the same for each weight (by default, a number between $0$ and $1$).
+
+<<>>=
+expand.parameters <- function(n, m, bounds = "r (0, 1)") {
+  par <- expand.grid(p = 1:n, a = 1:m);
+  return(paste(paste("p", par$p, "a", par$a, sep=""), "\"\"", bounds,
+               collapse="\n"));
+}
+@ 
+
+There are also settings, which we can ask \verb@irace@ to explore, which are the same for each member of the population or specify global characteristics of the model. In order to set the parameters we append these to the parameters to be expanded.
+<<>>=
+set.parameters <- function(n, m, common.settings = "s \"\" i (10, 100)\nr \"\" i (10, 100)", ...) {
+  return(readParameters(text=paste(expand.parameters(n, m, ...), 
+                          common.settings, 
+                          sep = "\n")));
+}
+@ 
+
+The next step is to ensure that the model that is tested by \verb@irace@ follows the specifications given.
+
+<<>>=
+hook.run.n <- function(instance, candidate, 
+                      extra.params = NULL, config = list()) {
+  # check that the correct number of participants is on the platform
+  n <- length(ibase$population);
+  ng <- names(candidate$values[grep("p[0-9]+a[0-9]+", 
+                                    names(candidate$values))]);
+  np <- length(unique(sub("a[0-9]+", "", ng)));
+  stopifnot(n == np);
+  
+  # retrieve the number of factors to be considered
+  m <- length(unique(sub("p[0-9]+", "", ng)));
+  # check that this corresponds to the number of factors considered
+  for(i in 1:n) {
+   stopifnot(m == length(ibase$population[[i]]$preferences$factors)); 
+  }
+  
+  # set preferences and characteristics for each member of the population.
+  for(i in 1:n) {
+    ibase$population[[i]]$characteristics$rationality <- 
+      as.numeric(candidate$values[["r"]]);
+
+    a <- numeric(m);
+    # retrieve weights
+    for(j in 1:m) {
+      a[j] <- as.numeric(candidate$values[[paste("p", i, "a", j, sep="")]]);
+    }
+    # normalize weights
+    a <- a/sum(a);
+    # set weights
+    ibase$population[[i]]$preferences$a <- a;
+  }
+  
+  # seed the platform with ideas (if any)
+  ibase$store <- set.store(instance);
+  
+  # run the platform the required number of steps
+  pout <- ibase$run(as.numeric(candidate$values[["s"]]));
+  return(evaluate(pout));
+}
+@ 
+
+Before \verb@irace@ can be run, we first need to create the base model with its participants. For this, we need to specify the number of participants required, the possible characteristics that these participants can have, and the list of idea components that the participants take into consideration. In addition one can specify the details governing the sample of the characteristics. See \verb@?sample@.
+
+<<>>=
+set.population <- function(n,
+                           character = expand.grid(
+                             famous = c(TRUE, FALSE),
+                             com = c(TRUE, FALSE),
+                             maturity = 1:10),
+                           components = list(notoriety, effort, diffusion, 
+                             public, own, control), ...) {
+  m <- length(components);
+  
+  crowd <- gen(Participant, n, 
+               characteristics = list(famous = TRUE,
+                 com = TRUE, rationality = 100, maturity = 1),
+               preferences = list(factors = components,
+                 a = rep(1/m, m)));
+  
+  character.space <- 1:nrow(character);
+  demographics <- sample(character.space, n, ...);
+  
+  for(i in 1:n) {
+    spec <- character[demographics[i],];
+    crowd[[i]]$characteristics[names(spec)] <- spec;
+  }
+  return(crowd);
+}
+@ 
+
+Now we should be able to run a race as follows:
+
+<<>>=
+ibase <- Platform$new();
+ibase$population <- set.population(10, 
+                                   expand.grid(famous= c(T, F), 
+                                               maturity=c(2, 4, 6, 8),
+											   com = c(T, F)),
+                                   list(effort, notoriety, diffusion, control));
+@
+<<eval=false>>=
+result3 <- irace(tunerConfig = list(
+                   hookRun = hook.run.n,
+                   instances = rep("empty", 10),
+                   maxExperiments = 1000,
+                   logFile = ""),
+                 parameters = set.parameters(10, 4));
+
+@ 
+
+We want know the maturity level, who is famous and who is non-profit:
+
+<<>>=
+for(guy in ibase$population) { print(guy$characteristics$maturity) };
+@
+
+<<>>=
+for(guy in ibase$population) { print(guy$characteristics$famous) };
+@
+
+<<>>=
+for(guy in ibase$population) { print(guy$characteristics$com) };
+@
+
+Now that we have the results we set them aside to be analyzed later.
+
+<<eval=false>>=
+# to csv:
+write.csv(result3, file="irace3.csv");
+# to latex
+# present them vertically to make the easier to read with "t" to transpose the matrix
+print(xtable(t(result3)), floating=FALSE, file="irace3.tex");
+@ 
+
+%\begin{table}
+%  \caption{The irace results}
+%  \input{irace3}
+%\end{table}
+
+<<>>=
+write.csv(t(sapply(ibase$population, function(guy) { list(maturity=guy$characteristics$maturity, famous=guy$characteristics$famous, com=guy$characteristics$com)})), file="ibase-population.csv")
+@ 
+
+\paragraph{Change objective function in a more elegant way}
+Can we separate the running of the model from it's evaluation?
+There seems to be a possibility to specify a separate evaluation function.
+
+<<>>=
+hook.run.m <- function(instance, candidate, 
+                       extra.params = NULL, config = list()) {
+  # check that the correct number of participants is on the platform
+  n <- length(ibase$population);
+  ng <- names(candidate$values[grep("p[0-9]+a[0-9]+", 
+                                    names(candidate$values))]);
+  np <- length(unique(sub("a[0-9]+", "", ng)));
+  stopifnot(n == np);
+  
+  # retrieve the number of factors to be considered
+  m <- length(unique(sub("p[0-9]+", "", ng)));
+  # check that this corresponds to the number of factors considered
+  for(i in 1:n) {
+   stopifnot(m == length(ibase$population[[i]]$preferences$factors)); 
+  }
+  
+  # set preferences and characteristics for each member of the population.
+  for(i in 1:n) {
+    ibase$population[[i]]$characteristics$rationality <- 
+      as.numeric(candidate$values[["r"]]);
+
+    a <- numeric(m);
+    # retrieve weights
+    for(j in 1:m) {
+      a[j] <- as.numeric(candidate$values[[paste("p", i, "a", j, sep="")]]);
+    }
+    # normalize weights
+    a <- a/sum(a);
+    # set weights
+    ibase$population[[i]]$preferences$a <- a;
+  }
+  
+  # seed the platform with ideas (if any)
+  ibase$store <- set.store(instance);
+  
+  # run the platform the required number of steps
+  pout <- ibase$run(as.numeric(candidate$values[["s"]]));
+  return(pout);
+}
+@ 
+
+Now we should be able to run a race as follows:
+
+<<eval=false>>=
+ibase <- Platform$new();
+ibase$population <- set.population(10, 
+                                   expand.grid(famous= c(T, F), 
+                                               maturity=c(2, 4, 6, 8),
+											   com = c(T, F)),
+                                   list(effort, notoriety, diffusion, control));
+
+
+result3 <- irace(tunerConfig = list(
+                   hookRun = hook.run.n,
+                   instances = rep("empty", 10),
+                   maxExperiments = 1000,
+                   instances.extra.params = rep("howdy",10),
+                   logFile = ""),
+                 parameters = set.parameters(10, 4));
+@ 
+
+Unfortunately this generates an error.
+
+So we'll rewrite our \verb@hook.run@ instead.
+Awaiting a better documentation and implementation of \verb@irace@ we'll have to use an ugly hack and pass extra information through \verb@extra.params@. The extra information in the function below is the function used for evaluation. If the information is missing, just the model will be returned without evaluation.
+
+<<>>=
+hook.run.extra <- function(instance, candidate, 
+                           extra.params = list(eval = evaluate, 
+                             target = c(0, 2, 1, 0, 0, 0),
+                             population = set.population(10)), 
+                           config = list()) {
+  # create platform
+  my.platform <- Platform$new();
+  my.platform$population <- extra.params$population;
+
+  # check that the correct number of participants is on the platform
+  n <- length(my.platform$population);
+  ng <- names(candidate$values[grep("p[0-9]+a[0-9]+", 
+                                    names(candidate$values))]);
+  np <- length(unique(sub("a[0-9]+", "", ng)));
+  stopifnot(n == np);
+  
+  # retrieve the number of factors to be considered
+  m <- length(unique(sub("p[0-9]+", "", ng)));
+  # check that this corresponds to the number of factors considered
+  for(i in 1:n) {
+   stopifnot(m == length(my.platform$population[[i]]$preferences$factors)); 
+  }
+  
+  # set preferences and characteristics for each member of the population.
+  for(i in 1:n) {
+    my.platform$population[[i]]$characteristics$rationality <- 
+      as.numeric(candidate$values[["r"]]);
+
+    a <- numeric(m);
+    # retrieve weights
+    for(j in 1:m) {
+      a[j] <- as.numeric(candidate$values[[paste("p", i, "a", j, sep="")]]);
+    }
+    # normalize weights
+    a <- a/sum(a);
+    # set weights
+    my.platform$population[[i]]$preferences$a <- a;
+  }
+  
+  # seed the platform with ideas (if any)
+  my.platform$store <- instance;
+  
+  # run the platform the required number of steps
+  pout <- my.platform$run(as.numeric(candidate$values[["s"]]));
+  
+  if(is.null(extra.params$eval)) { 
+    # no eval function specified
+    # return the model rather than the evaluation
+    return(my.platform$copy());
+  } else {
+    # evaluate the model
+    return(extra.params$eval(pout, extra.params$target));
+  }
+}
+@ 
+
+Now running \verb@irace@ requires quite of bit of non-evident code, so we better embed it in another function.
+
+<<>>=
+run.irace <- function(pop.size = 10, 
+                      participant.types = expand.grid(famous= c(T, F), 
+                        maturity=c(2, 4, 6, 8),
+                        com = c(T, F)),
+                      idea.factors = list(effort, notoriety, 
+                        diffusion, control, skip),
+                      n.instances = 100,
+                      hook.fun = hook.run.extra,
+                      budget = 1000,
+                      log.file = "",
+                      hook.eval = evaluate,
+                      objective = c(0, 2, 1, 0, 0, 0),
+                      store.base = list(set.store("empty"))) {
+
+  return(irace(tunerConfig = list(
+                 hookRun = hook.fun,
+                 instances = sample(store.base, n.instances, 
+                   replace = TRUE),
+                 maxExperiments = budget,
+                 instances.extra.params = lapply(1:n.instances, 
+                   function(x) 
+                   list(eval = hook.eval,
+                        target = objective,
+                        population = set.population(pop.size, 
+                          participant.types,
+                          idea.factors))),
+                 logFile = log.file),
+                 parameters = set.parameters(pop.size, 
+                   length(idea.factors))));
+}
+@ 
+
+
+\paragraph{Construct a model on the basis of an iRace Scenario}
+This requires a wrapper around the \verb@hook.run@ function used by \verb@iRace@ . The function \verb@seed.model@ does this. As arguments it gets the output of \verb@irace@ and a variable indicating whether the model should be run or not.
+
+<<>>=
+instantiate.model <- function(irace.selection, run = TRUE, 
+                              population = set.population(10, 
+                                expand.grid(famous= c(T, F), 
+                                            maturity=c(2, 4, 6, 8),
+                                            com = c(T, F)),
+                                list(effort, notoriety, diffusion, control,
+                                     skip)),
+                              hook = hook.run.extra,
+                              store.base = set.store("empty"),
+                              ...) {
+
+  set.model <- function(candidate.values) {
+    my.candidate <- list(values = candidate.values); 
+    if(!run) {
+      my.candidate$values$s <- 0;
+    }
+    return(hook(instance = store.base, 
+                candidate = my.candidate,
+                extra.params = list(population = population),
+                ...));
+  }
+  
+  return(lapply(apply(irace.selection, 1, as.list), 
+                set.model));
+  
+}
+@ 
+
+Here is how the above functions can be used to obtain a list of scenarios.
+
+<<eval=false>>=
+test1 <- run.irace(pop.size=5, budget=500, participant.types = expand.grid(famous=c(T,F),maturity=c(2,4,6,8), com=c(T,F)), idea.factors = list(effort,notoriety, diffusion, control, skip));
+scenari1 <- instantiate.model(test1, population = set.population(5, expand.grid(famous=c(T,F),maturity=c(2,4,6,8), com=c(T,F)), list(effort, notoriety, diffusion, control, skip)))
+@ 
+
+
+\paragraph{Run iRace with a different starting point}
+In order to do this we need to set the argument \verb@store.base@ of the function \verb@run.irace@, as in
+<<eval=false>>=
+run.irace(store.base=list(scenari1[[1]]$store));
+@ 
+
+Alternatively, it might be nice to generate instances on the basis of the scenarios extracted from earlier runs of \verb@irace@. We can redefine the function \verb@set.store@ to make this possible.
+
+<<>>=
+set.store <- function(store.id = 1, scenarii = scenari1) {
+  if(store.id == "empty") {
+    return(list());
+  } else {
+    if(store.id =="random") {
+      return(scenarii[[sample(length(scenarii), 1)]]$store);
+    } else {
+      return(scenarii[[store.id]]$store)
+    } 
+  }
+}
+@ 
+
+In the implementation above there is a list of scenarios provided by the second argument from which the scenario with the label or sequence number given by the first argument is taken to provide the initial platform store. In addition, one can specify the store to be ``empty'' or one can randomly pick one of the scenarios listed in the second argument. As in:
+
+<<eval=false>>=
+run.irace(store.base = list(set.store(2, scenari1)));
+@ 
+
+Not that it is also possible to generate more than one model instance per candidate scenario that is returned by \verb@irace@.
+
+For instance, the code below generates 10 different instances of the model on the basis of the scenarios proposed by \verb@irace@.
+
+<<eval=false>>=
+test.instances <- instantiate.model(test1[sample(nrow(test1), 10, replace=T),], population = set.population(5, expand.grid(famous=c(T,F),maturity=c(2,4,6,8), com=c(T,F)), list(effort, notoriety, diffusion, control, skip)));
+@ 
+
+With this we can select more broadly.
+<<eval=false>>=
+run.irace(store.base = list(set.store("random", test.instances)));
+@ 
+
+Note that the function \verb@run.irace@ accepts a list of instances as well as input argument. The function \verb@get.stores@ retrieves an array of platform stores from a list of model instances.
+
+<<>>=
+get.stores <- function(instances) {
+  return(lapply(test.instances, function(i) i$store));
+}
+@ 
+
+And so we could run \verb@irace@ like this as well:
+<<eval=false>>=
+run.irace(store.base = get.stores(test.instances));
+@ 
+
+\paragraph{Inspect Model and Explore Scenarios}
+\subparagraph{Demography}
+In order to retrieve the weights of a model instance it suffices to look at how its population is specified.
+<<>>=
+get.weights <- function(instance) {
+  return(sapply(instance$population, 
+                function(i) i$preferences$a));
+}
+@ 
+
+As in
+<<eval=false>>=
+get.weights(test.instances[[1]]);
+@ 
+
+The characteristics are retrieved in a similar fashion.
+<<>>=
+get.characteristics <- function(instance) {
+  return(sapply(instance$population, function(i) i$characteristics));
+}
+@ 
+
+\subparagraph{Other stuff}
+How many ideas in store:
+<<>>=
+get.size <- function(instance) {
+  return(length(instance$store));
+}
+@ 
+
+\subparagraph{Inspect the model}
+Generate instances without actually running the model by setting the argument \verb@run@ to \verb@FALSE@. Next, turn on tracing as described above. That is,
+<<eval=false>>=
+trace.contributions(TRUE);
+@ 
+Finally run the instance of the model to be inspected for a specified number of steps and see what happens.
+
+For instance
+<<eval=false>>=
+my.instance <- test.instances[[1]];
+my.instance$run(10);
+@ 
+
+\subsection{Monte Carlo Test}
+We would like to know the identity of the participants whose ideas reach maturity. In order to make sure that this information is store in the ideas, we have to include an ``id'' field in the list of characteristics assigned to participants by the function \verb@set.population@.
+
+<<>>=
+set.population <- function(n,
+                           character = expand.grid(
+                             famous = c(TRUE, FALSE),
+                             com = c(TRUE, FALSE),
+                             maturity = 1:10),
+                           components = list(notoriety, effort, diffusion, 
+                             public, own, control), ...) {
+  m <- length(components);
+  
+  crowd <- gen(Participant, n, 
+               characteristics = list(famous = TRUE, id = "none",
+                 com = TRUE, rationality = 100, maturity = 1),
+               preferences = list(factors = components,
+                 a = rep(1/m, m)));
+  
+  character.space <- 1:nrow(character);
+  demographics <- sample(character.space, n, ...);
+  
+  for(i in 1:n) {
+    spec <- character[demographics[i],];
+    crowd[[i]]$characteristics[names(spec)] <- spec;
+    crowd[[i]]$characteristics$id <- paste("p", i, sep="");
+    names(crowd[[i]]$preferences$a) <- paste("a", 1:m, sep="");
+  }
+  
+  names(crowd) <- paste("p", 1:n, sep="");
+  return(crowd);
+}
+@ 
+
+In order to make sure that the population used in iRace is the same as the population used afterwards the population is specified separately (and so we need to adapt the function \verb@run.irace@.
+
+
+<<>>=
+run.irace <- function(population = set.population(100), 
+                      n.instances = 1000,
+                      hook.fun = hook.run.extra,
+                      budget = 1000,
+                      log.file = "",
+                      hook.eval = evaluate,
+                      objective = c(0, 2, 1, 0, 0, 0),
+                      store.base = list(set.store("empty"))) {
+
+  return(irace(tunerConfig = list(
+                 hookRun = hook.fun,
+                 instances = sample(store.base, n.instances, 
+                   replace = TRUE),
+                 maxExperiments = budget,
+                 instances.extra.params = lapply(1:n.instances, 
+                   function(x) 
+                   list(eval = hook.eval,
+                        target = objective,
+                        population = population)),
+                 logFile = log.file),
+                 parameters = set.parameters(length(population), 
+                   length(population[[1]]$preferences$a))));
+}
+@ 
+
+
+<<>>=
+my.participants <- set.population(100,
+                                  expand.grid(famous=c(T,F),
+                                              maturity=c(1,2,3,4,5,6,7,8,9,10), com=c(T,F)), 
+                                  list(effort,notoriety, diffusion, control, 
+                                       skip));
+test1 <- run.irace(my.participants, budget=1000);
+scenari1 <- instantiate.model(test1, population = my.participants);
+@ 
+
+<<>>=
+m1 <- scenari1[[1]]$copy();
+m1.output <- m1$run(100);
+m1.idea.author.ids <-  t(sapply(m1.output$element, 
+                                function(e) e$meta$author$id));
+summary(as.factor(m1.idea.author.ids));
+@ 
+
+Now we can do the same multiple times.
+
+For this we re-use the function \verb@test@ defined before. We just need to redefine the function \verb@wrap@ to get the right output.
+
+<<>>=
+test <- function(platform, steps, times = 10, initial.store = list(), ...) {
+  return(sapply(1:times,
+                function(i) {
+                  platform$store <- initial.store;
+                  return(wrap(platform$run(steps), ...));
+                }));
+}
+
+wrap <- function(output, participant.names) {
+  if(length(output$step) > 0) {
+    return(summary(factor(sapply(output$element, 
+                                 function(x) {
+                                   x$meta$author$id;
+                                 }), levels = participant.names)));
+  } else {
+    return(invisible(numeric(length(participant.names))));
+  }
+}
+@ 
+
+<<>>=
+mc1 <- test(platform=m1, steps=test1$s[1], times=10, 
+            initial.store = m1$store,
+            participant.names = names(m1$population));
+			
+# to latex
+print(xtable(t(mc1), floating=FALSE, file="mc1.tex"));
+@ 
+
+\begin{table}
+  \caption{Ideas produced per participant}
+  \input{mc1}
+\end{table}
+
+For further analysis we save the model output to a \verb@csv@ file.
+<<>>=
+write.model.results <- function(test.results, model, ...) {
+  write.csv(cbind(t(sapply(model$population, function(a) c(unlist(a$characteristics), a$preferences$a))), test.results), ...);
+}
+@ 
+
+as in
+<<>>=
+write.model.results(mc1, m1, file="mc1.csv");
+@ 
+
+\section{test 2004 starting from 2003}
+<<>>=
+result2003 <- run.irace(my.participants, budget=100);
+
+run.irace <- function(population = set.population(10), 
+                      n.instances = 100,
+                      hook.fun = hook.run.extra,
+                      budget = 100,
+                      log.file = "",
+                      hook.eval = evaluate,
+                      objective = c(1, 1, 2, 0, 8, 0),
+                      store.base = list(set.store("empty"))) {
+
+  return(irace(tunerConfig = list(
+                 hookRun = hook.fun,
+                 instances = sample(store.base, n.instances, 
+                   replace = TRUE),
+                 maxExperiments = budget,
+                 instances.extra.params = lapply(1:n.instances, 
+                   function(x) 
+                   list(eval = hook.eval,
+                        target = objective,
+                        population = population)),
+                 logFile = log.file),
+                 parameters = set.parameters(length(population), 
+                   length(population[[1]]$preferences$a))));
+}
+
+scenari2 <- instantiate.model(result2003, population = my.participants);
+platform.contents <- get.stores(instances2003):
+result2004 <- run.irace(store.base = platform.contents, my.participants, budget=1000);
+@ 
+
+\bibliography{120710}
+\bibliographystyle{apalike}
+
+ 
+\end{document}
+

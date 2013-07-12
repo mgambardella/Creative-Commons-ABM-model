@@ -1,0 +1,805 @@
+% a model compendium
+% (C) October 31, 2012 Matthijs den Besten & Massimiliano Gambardella
+% this code is under Creative Commons license Attribution Share-Alike 3.0
+% e-mails: {matthijs.denbesten, massimiliano.gambardella} AT gmail.com
+
+% run the following to generate pdf document from the contents of this file:
+% > R CMD Sweave model.Rnw
+% > pdflatex model
+% and rerun...
+% > bibtex model
+% > pdflatex model
+% > pdflatex model
+% run the following to extract the model code from the contents of this file:
+% > R CMD Stangle model.Rnw
+% to edit this file consider using Emacs with the ESS module loaded
+
+\documentclass{scrartcl}
+
+\usepackage{url}
+\usepackage{makeidx}
+\usepackage{longtable}
+\usepackage{natbib}
+\usepackage{amsmath, amsfonts, amssymb,}
+\usepackage[english]{babel}
+
+\makeindex
+
+
+\begin{document}
+
+\title{Modelling co-creation in the creative commons}
+\author{Matthijs den Besten}
+
+\maketitle
+\tableofcontents
+
+\section{Introduction}
+We propose a Cobb-Douglas utility function to evaluate the quality of ideas on the basis of the weighted product of the aspects of the ideas of importance to potential contributors. Participants choose to contribute to ideas hosted on a platform guided by this utility function and once ideas have received a sufficient number of contributions they are removed from the platform and published.
+
+This model allows for an analysis of the use of the creative commons licence \citep{Mustonen:2010p9256} in the context of a environment reminiscent of Kickstarter.
+
+\section{Related work}
+This model is inspired by the Garbage Can model by March and Olson, which has been reimplemented as an agent-based model recently.
+
+\section{Utility}
+\subsection{Cobb-Douglas}
+To simulate the behavior of the participants we use the Cobb-Douglas
+Utility Fonction.
+Generally the Cobb-Douglas Utility Fonction is defined as:
+\begin{equation}\label{eq:CD}
+  U(x,y) = x^{\alpha} y^{1-\alpha}
+\end{equation}
+where $U = \textrm{output}$, $x$ and $y$ are the main factors that
+participants wish to obtain.
+
+Equation \ref{eq:CD2} below gives Cobb-Douglas for $n$ factors rather than just $x$ and $y$.
+
+\begin{equation}\label{eq:CD2}
+  U(x_1, \dots, x_n) = \prod_{i=1}^n x_i^{\alpha_i}
+\end{equation}
+Just in case, let's define a separate Cobb-Douglas utility function:
+<<generic Cobb Douglas utility function>>=
+cobb.douglas <- function(elements, 
+                         factors = list(labor, capital), 
+                         a = rep(1/length(factors),length(factors)), 
+                         ...) {
+  
+  u <- rep(1, length(elements));
+  for(i in 1:length(factors)) {
+    x <- sapply(elements, factors[[i]], ...);
+    u <- u * (x^a[i]);
+  }
+  return(u);
+}
+@ 
+The function \verb@cobb.douglas@ takes a list of \verb@elements@ and evaluates the according to the functions listed as the argument \verb@factors@. The vector \verb@a@ specifies the weigths given to each of the functions.
+
+
+\subsection{Constant Elasticity Substitution}
+Following Wikipedia, the Constant Elasticity Substitution (CES) production function is defined as:
+\begin{equation}\label{eq:CES2}
+  Q = F \times (a \times K^r + (1 - a) \times L^r)^{\frac{1}{r}}
+\end{equation}
+where $Q = \textrm{output}$, $F = \textrm{factor productivity}$, $a = \textrm{share parameter}$, $K$ and $L$ are the primary production factors (capital and labor), $r = \frac{s-1}{s}$, and $s = \frac{1}{1-r}$, the elasticity of substitution. Represented as utility function $F$ is set to 1.
+
+Following Wikipedia again, the general from of the CES production function is:
+\begin{equation}\label{eq:cesn}
+  Q = F \cdot \left[\sum_{i=1}^{n} a_i^{\frac{1}{s}} X_i^{\frac{s-1}{s}} \right]^{\frac{s}{s-1}}
+\end{equation}\marginpar{\scriptsize [why $a_i^{\frac{1}{s}}$ and not simply $a_i$?] }
+where $Q$, $F$, $a$, and $s$ are as in equation{eq:CES2} and $X$ is a production factor ($i =1, 2, \dots, n$). We assume that alle elasticities between pairs of factors are identical.
+
+We can implement this function as follows:\index{ces}
+<<cesn>>=
+ces <- function(elements, 
+                factors = list(labor, capital), 
+                a = rep(1/length(factors),length(factors)), 
+                s = 10^99, ...) {
+  q <- length(elements);
+  for(i in 1:length(factors)) {
+    x <- sapply(unique.ideas, factors[[i]], ...);
+    q <- q + (a[i] * x^((s-1)/s))^(s/(s-1));
+  }
+  return(q);
+}
+@
+
+\section{Factors}
+The argument \verb@factors@ in the function \verb@cobb.douglas@ is a list of functions. These functions are called with an element of the list of \verb@elements@ as first argument, optionally with other arguments specified in the call of \verb@cobb.douglas@ in place of the dots. The functions need to be specified so that they return a value between $1$ and $2$ and so that they accept any argument as input (the latter is achieved by through the addition of $\dots$ in the function definition).
+
+\subsection{Authorship attributes}
+To understand why some data are retrieved more frequently than others we need to look at the meta-data associated with them and in particular information about the author of the data would seem important. That is why we need to associated meta-data with data creating a digital object that can be passed around.
+\index{Object}
+<<object>>=
+Object <- setRefClass("Object",
+                      fields = list(
+                        data = "vector",
+                        meta = "list"));
+@
+
+The \verb@meta@ field allows us to attach all kinds of attributes to our objects. Typically we care about flags that are either on or off. If they are not specified they are considered off. The following function returns the value associated with the flag.
+\index{flag.value}
+<<>>=
+flag.value <- function(flag) {
+  return(1+ifelse(is.null(flag), 0, flag));
+}
+@ 
+
+And the inverse:
+<<>>=
+inverse.flag.value <- function(flag) {
+  return(ifelse(is.null(flag), 1, 2-flag));
+  }
+@ 
+
+
+
+The function \verb@notoriety@ returns a value of $1$ or $2$ based on these meta-data.\index{notoriety}
+<<>>=
+notoriety <- function(idea, ...) {
+  return(flag.value(idea$meta$author$famous));
+}
+@ 
+
+We assume that a profit motive has a negative effect of the willingness to participate.\index{status}
+<<>>=
+status <- function(idea, ...) {
+  return(2 - flag.value(idea$meta$author$com));
+}
+@
+
+\subsection{Content properties}
+
+Still we are interested in the contents of the object itself as well. For instance in its size. In order to make sure the function \verb@size@ we need to provide a normalization factor as argument which is sufficiently large.
+
+<<>>=
+size <- function(idea, nominator=1, ...) {
+  return(1+length(idea$data)/nominator);
+}
+@
+
+
+
+\subsection{Licences}
+
+Following creative commons, licences are specified according to four attributes regarding attribution, commercial use, derivation, and sharing.
+
+\index{Licence}\index{Licence!type}
+<<licenses>>=
+Licence <- setRefClass("Licence",
+                       fields = list(
+                         by = "logical", sa = "logical",
+                         nd = "logical", nc = "logical"),
+                       methods = list(
+                         type = function() {
+                           if(by|sa|nd|nc) {
+                             return(paste("CC by", ifelse(sa, "sa",""),
+                                          ifelse(nd, "nd", ""),
+                                          ifelse(nc, "nc", ""),
+                                          sep="-"));
+                           }
+                           else {
+                             return("PD");
+                           }
+                         })
+                       );
+@
+
+
+According to specification, licenses can be more or less open. The degree of openness has no direct impact on the utility of a piece to a user as consumer, but it can serve to signal quality on the part of the creator.
+
+Table \ref{t:openness} shows the degrees of openness for each license type.
+
+\begin{table}
+  \caption{Degree of Openness} \label{t:openness}
+  \begin{tabular}{lll}
+    \hline
+    {\bf Degree of Openness\/} & {\bf Production\/} & {\bf Diffusion\/} \\
+    \hline
+    maximum & public domain & public domain \\
+    & CC by & CC by \\
+    \hline
+    medium & CC by-sa & CC by-sa \\
+    & CC by-nc & CC by-nd \\
+    & CC by-nc-sa \\
+    \hline
+    minimum & CC by-nd & CC by-nc \\
+    & CC by-nd-nc & CC by-nc-sa \\
+    & & CC by-nc-nd \\
+    \hline
+  \end{tabular}
+\end{table}
+
+Thus, openness is a function of license-types.
+
+\index{Licence!openness.production} \index{Licence!openness.diffusion}
+<<openness1>>=
+Licence$methods(
+                openness.production = function() {
+                                        # create 4-dimensional array
+                  aux <- array(NA,dim=c(2,2,2,2));
+                                        # by sa nd nc
+                  aux[1,1,1,1] <- 3;
+                  aux[2,1,1,1] <- 3;
+                  aux[2,2,1,1] <- 2;
+                  aux[2,1,1,2] <- 2;
+                  aux[2,2,1,2] <- 2;
+                  aux[2,1,2,1] <- 1;
+                  aux[2,1,2,2] <- 1;
+                                        # exploit fact that TRUE = 1 & FALSE = 0
+                  return(aux[by+1,sa+1,nd+1,nc+1]);
+                },
+                openness.diffusion = function() {
+                                        # create 4-dimensional array
+                  aux <- array(NA,dim=c(2,2,2,2));
+                                        # by sa nd nc
+                  aux[1,1,1,1] <- 3;
+                  aux[2,1,1,1] <- 3;
+                  aux[2,2,1,1] <- 2;
+                  aux[2,1,2,1] <- 2;
+                  aux[2,1,1,2] <- 1;
+                  aux[2,2,1,2] <- 1;
+                  aux[2,1,2,2] <- 1;
+                                        # exploit fact that TRUE = 1 & FALSE = 0
+                  return(aux[by+1,sa+1,nd+1,nc+1]);
+                },
+                openness = function(diffusion = TRUE) {
+                  degree <- ifelse(diffusion,
+                                   openness.diffusion(),
+                                   openness.production());
+                  if(is.na(degree)) {# no value has been specified
+                    stop(paste("Licence", type(),"is not valid"));
+                  } else {
+                    return(degree > 1);
+                  }
+                });
+@
+\index{Licence!openness}
+
+
+The default licence specification is ``public domain.''
+
+\index{Licence!initialize}
+<<LicenceInit>>=
+Licence$methods(
+                initialize = function(by = F, sa = F, nd = F, nc = F) {
+                  by <<- by;
+                  sa <<- sa;
+                  nd <<- nd;
+                  nc <<- nc;
+                  return(.self);
+                });
+@
+
+
+We have already developed a representation for licences above. There is a limited number of licences that participants are allowed to choose from. First, we want to make sure that licences can be specified only once.
+<<ll>>=
+Licence$fields();
+Licence$lock(names(Licence$fields()));
+@ 
+
+Only certain combinations of by, sa, nc, and nd are allowed. We can list them in the vector \verb@available.licences@. 
+\index{available.licences}
+<<al>>=
+available.licences <- c(Licence$new(),
+                        Licence$new(by = TRUE),
+                        Licence$new(by = TRUE, sa = TRUE),
+                        Licence$new(by = TRUE, sa = TRUE, nc = TRUE),
+                        Licence$new(by = TRUE, sa = FALSE, nc = TRUE),
+                        Licence$new(by = TRUE, nd = TRUE, nc = TRUE),
+                        Licence$new(by = TRUE, nd = TRUE));
+@ 
+
+The aspect of licences that is of interest to potential participants is the ``openness of production'' or the generativity that it allows for. Assuming that the licence is indicated in the object's meta-data, one can specify a function \verb@generativity@ that can be invoked by the utility function like this:
+
+\index{generativity}
+<<generativity>>=
+generativity <- function(idea, ...) {
+  if(is.null(idea$meta$licence)) {
+    return(1);
+  } else {
+    return(1+idea$meta$licence$openness.production()/3);
+  }
+}
+@ 
+
+\subsection{Repetition}
+
+In our model, we make no distinction between the copying of ideas and the contribution to them. What's more, a contribution to an idea is represented by the availabity of an additional copy of that idea among the elements taken into consideration by the participants. 
+
+For administrative purposes it is useful to creat a class \verb@Idea@ derived from the class \verb@Object@, which has a field \verb@id@ to identify it. In the implementation proposed here the ideas are identified by a randomly drawn number at creation. While not guaranteed to yield unique numbers, this method has the advantage that it is easy to implement.
+
+In addition, for each idea it can be specified how many contributes would be required for the idea to mature.
+
+\index{Idea}
+<<idea>>=
+Idea <- setRefClass("Idea",
+                    fields = list(
+                      maturity.threshold = "numeric",
+                      id = "numeric"),
+                    contains = "Object");
+@
+
+The \verb@initialize@ method is called when a new \verb@Idea@ is created through \verb@Idea$new(...)@, where the dots can be replaced by arguments such as \verb@maturity.treshold@ that specify details about the ideas.
+\index{Idea!initialize}
+<<>>=
+Idea$methods(initialize = function(maturity.threshold = sample(1:10,1),
+               id = runif(1), ...) {
+  id <<- id;
+  maturity.threshold <<- maturity.threshold;
+  callSuper(...);
+  return(.self);
+});
+@ 
+
+The field \verb@id@ can be set only once.
+\index{Idea!lock}
+<<>>=
+Idea$lock("id");
+@ 
+
+We need a special idea indicating the absence of ideas to represent the choice of a particant not to contribute to any idea.
+
+<<>>=
+blank.idea <- Idea$new(maturity.threshold=0, id = "void")
+@ 
+
+
+The auxiliary function \verb@gen@ below can be used to generate a list of objects with that optional parameters.\index{gen}
+<<>>=
+gen <- function(class, m, ...) sapply(1:m, function(i) class$new(...))
+@ 
+
+The auxiliary function \verb@index@ return a list of unique elements and indicates the number of repeats in the field \verb@duplicates@ in the metadata. There is one exception: ``blank ideas'' ideas without any content do not count. These ideas are recognized by the \verb@id@ field set to \verb@void@.
+\index{index}
+<<>>=
+index <- function(ideas) {
+  ids <- sapply(ideas, function(element) element$id);
+  unique.ideas <- ideas[!duplicated(ids)];
+  for(idea in unique.ideas) {
+    repeats <- sum(idea$id == ids);
+    idea$meta$duplicates <- repeats - 1;
+    if(idea$id == "void") {
+      idea$meta$duplicates <- 0;
+    }
+  }
+  return(unique.ideas);
+}
+@ 
+
+
+
+On the basis of the number of repeats, participants can estimate how much effort would still be required to make the idea mature. The indicator of effort is provided by the function \verb@effort@, which can be called by the utility function.
+
+\index{effort}
+<<>>=
+effort <- function(idea, max.effort = 10, ...) {
+  imt <- idea$maturity.threshold;
+  contributions <- ifelse(is.null(idea$meta$duplicates),
+                          0, idea$meta$duplicates);
+  return(2 - (imt - contributions)/(max(imt, max.effort)));
+}
+@ 
+Less effort is of course preferred.
+
+\subsection{Lurking}
+Often participants may not want to contribute at all. In that case they value the blank idea defined above hightly. 
+
+<<>>=
+is.void <- function(idea) {
+  return(idea$id == "void");
+}
+@ 
+
+Within the menu of things to consider \verb@is.void@ can be interpreted as the value given to remain passive, that is to \verb@skip@ the ideas.
+<<>>=
+skip <- function(idea, ...) {
+  return(1+is.void(idea));
+}
+@ 
+
+\subsection{Control}
+Participants may evaluate the ideas they are nurturing themselves differently from the ideas that are already in public.
+
+If they'd suffer from the ``not invented here'' syndrome, they'd value external ideas negatively.
+\index{not.invented.here}
+<<>>=
+not.invented.here <- function(idea, ...) {
+  return(2-flag.value(idea$meta$public));
+}
+@
+
+Alternatively, the participant may care about certain aspects of ideas only in case the idea development is outside his/her control as it is already public. This may be important in the context of licences where the preferences of the original author might be different from those of other contributors.
+
+\index{generativity2}
+<<>>=
+generativity2 <- function(idea, ...) {
+  if(idea$meta$public) {
+    return(generativity(idea, ...));
+  } else {
+    return(1);
+  }
+}
+@
+
+It might even be the case that the preferences are completely opposite.
+\index{generativity3}
+<<>>=
+generativity3 <- function(idea, ...) {
+  if(idea$meta$public) {
+    return(generativity(idea, ...));
+  } else {
+    return(3-generativity(idea, ...));
+  }
+}
+@ 
+
+\section{Interaction}
+
+\subsection{Participation}
+In our model, the utility function, which evaluates ideas on the basis of aspects listed in the previous sections, is invoked by participants.
+
+Participants have characteristics and preferences. 
+\index{Participant}
+<<>>=
+Participant <- setRefClass("Participant",
+                           fields = list(
+                             characteristics = "list",
+                             preferences = "list"));
+@ 
+
+The main activity of participants in our model is to select an idea among alternatives for contribution. Existing alternatives are compared to ideas that the participant can generate on its own and evaluated using a utility function. The participant's characteristics determine the ideas generated and the preferences are used as input to the utility function.
+\index{Participant!select}
+<<>>=
+Participant$methods(
+                    select = function(alternatives) {
+                      own.ideas <- generate.ideas(characteristics);
+                      all.ideas <- c(own.ideas, alternatives);
+                      q <- utility(all.ideas, preferences);
+                      choice <- all.ideas[[which.max(q)]];
+                      choice$meta$public <- TRUE;
+                      return(choice);
+                    });
+@
+
+In fact, in case of ties, we would like to select randomly among ties.
+<<eval=FALSE>>=
+require(nnet);
+Participant$methods(
+                    select = function(alternatives) {
+                      own.ideas <- generate.ideas(characteristics);
+                      all.ideas <- c(own.ideas, alternatives);
+                      q <- utility(all.ideas, preferences);
+                      choice <- all.ideas[[which.is.max(q)]];
+                      choice$meta$public <- TRUE;
+                      return(choice);
+                    });
+@ 
+
+Alternatively, one could sample among all alternatives and let the utility indicate the sample probabilities amplified by a factor depending on how sure the participant is of his/her choice, i.e. how much bound the participant's rationality. A high value for rationality implies that the participant has a high likelihood of selecting the idea with the highest utility. A lower value diminishes the likelihood.
+
+<<>>=
+Participant$methods(
+                    select = function(alternatives) {
+                      own.ideas <- generate.ideas(characteristics);
+                      all.ideas <- c(own.ideas, alternatives);
+                      q <- utility(all.ideas, preferences);
+                      amp <- ifelse(is.null(characteristics$rationality),
+                                    100,
+                                    characteristics$rationality);
+                      choice <- all.ideas[[sample(1:length(q), 1, prob=q^amp)]];
+                      choice$meta$public <- TRUE;
+                      return(choice);
+                    });
+@ 
+
+For now we stick with this selection method.
+
+The field \verb@public@ in the list of meta-data serves to distinguish between ideas that that others can see and the participant's own ideas.
+
+The function \verb@generate.ideas@ returns of list of ideas based on the author characteristics, which are given as list of parameters. By default it will create one idea for each type of licence and add the author characteristics to the meta-data. For simplicity sake, the maturity threshold the author associates with the idea is the same for each idea if it is specified in the list of parameters. If no such parameter is specified, the maturity is a randomly sampled value between $1$ and $10$. The probability with which each value is sampled is proportional to the square-root of the value. In addition to the ideas an unlicensed blank idea is added to the pool. 
+
+\index{generate.ideas}
+<<>>=
+generate.ideas <- function(parameters = NULL) {
+  ideas <- NULL;
+  idea.maturity <- ifelse(is.null(parameters$maturity),
+                          sample(1:10, 1, prob=sqrt(1:10)),
+                          parameters$maturity);
+  idea.size <- ifelse(is.null(parameters$verbosity),
+                      sample(1:10, 1, prob = sqrt(1:10)),
+                      parameters$verbosity);
+  for(licence in available.licences) {
+    idea <- Idea$new(maturity.threshold = idea.maturity);
+    idea$data <- sample(0:1, idea.size, replace = TRUE);
+    idea$meta$licence <- licence;
+    idea$meta$author <- parameters;
+    idea$meta$public <- FALSE;
+    ideas <- c(ideas, idea);
+  }
+  return(c(ideas, blank.idea));
+}
+@ 
+
+The function \verb@utility@ matches the author preferences to a utility function. It takes the elements to be evaluated as main argument, the parameters for evaluation as second argument and the functional form to be used as third argument. By default the form used is the Cobb-Douglas function defined above.
+
+The parameters to be provided are the functions evaluating aspects of ideas to be considered, the weights given to each aspect, and the values of additional parameters that might be needed by each of the aspect functions.
+
+\index{utility}
+<<>>=
+utility <- function(elements, parameters, fun = cobb.douglas) {
+  stopifnot("factors" %in% names(parameters));
+  unique.items <- index(elements);
+  settings <- parse.parameters(parameters, fun, unique.items);
+  evaluation <- do.call(fun, settings);
+  return(evaluation);
+}
+@
+
+The function \verb@utility@ calls upon the auxiliary function \verb@parse.parameters@, which will check that all parameters needed are provided and substitute with default values if not. This is achieved by listing all the arguments needed by the utility function (\verb@cobb.douglas@ for now) and the aspects functions given as list in the parameter named \verb@factors@. The list is than compared to all parameters that are named in the parameter list. The argument \verb@env@ indicates the context that the auxiliary function \verb@set.default@ needs to take into account in the determination of the default values.
+
+\index{parse.parameters}
+<<>>=
+parse.parameters <- function(par, fun, env) {
+  needed <- get.args(c(fun, par$factors));
+  provided <- intersect(names(par), needed);
+  todo <- setdiff(needed, provided);
+  return(c(list(elements=env),
+           c(par[names(par) %in% provided], 
+             sapply(todo, set.default, env, length(par$factors)))));
+}
+@ 
+
+In order to obtain all arguments needed by a collection of functions the auxiliary function \verb@get.args@ is used.
+
+\index{get.args}
+<<extract parameters from functions>>=
+get.args <- function(function.list) {
+  return(grep("...", 
+              unique(unlist(sapply(function.list, 
+                                   function(f) { 
+                                     names(formals(f)[-1])
+                                   }))), 
+              invert=TRUE, fixed=TRUE, value=TRUE));
+}
+@ 
+
+
+And the function \verb@set.default@ is used to set the default values for arguments encountered. For a given \verb@field@, this function determines the default value given the \verb@context@ consisting of the elements to be evaluated and \verb@n@, the number of factors to be considered. 
+
+\index{set.default}
+<<>>=
+set.default <- function(field, context, n) {
+  max.maturity <- function(ideas) {
+    return(max(sapply(ideas, function(x) x$maturity.threshold)));
+  }
+  max.size <- function(objects) {
+    return(max(sapply(objects, function(x) length(x$data))));
+  }
+  
+
+  return(switch(field, 
+                a = rep(1/n, n),
+                max.effort = max.maturity(context),
+                nominator = max.size(context),
+                NA));
+}
+@ 
+
+
+
+\subsection{Hosting}
+
+Participants sample there ideas from a store of ideas that is managed on a platform. The participants make up the population that form the audience to this platform.
+
+<<>>=
+Platform <- setRefClass("Platform",
+                        fields = list(
+                          population = "vector",
+                          store = "vector"));
+@
+
+In our model the platform activites the participants.
+
+The method \verb@poll@ selects one participants among those signed up to the platform, who will contribute to an idea that is already in store or add a new idea to the store. Blank ideas will not be added to the store.
+
+\index{Platform!poll}
+<<>>=
+Platform$methods(
+                 poll = function() {
+                   idx <- sample(1:length(population), 1);
+                   participant <- population[[idx]];
+                   contribution <- participant$select(store);
+                   if(contribution$id != "void") {
+                     store <<- c(store, contribution);
+                   }
+                 });
+@
+
+Ideas that have reached their maturity threshold are removed from the platform with the method \verb@clean@.
+
+\index{Platform!clean}
+<<>>=
+Platform$methods(
+                clean = function() {
+                  runoff <- NULL;
+                  id.vector <- sapply(store, function(element) element$id);
+                  kill <- logical(length(store));
+                  for(id in unique(id.vector)) {
+                    location <- id == id.vector;
+                    element <- store[location][[1]];
+                    repeats <- sum(location);
+                    if(repeats > element$maturity.threshold) {
+                      kill[location] <- TRUE;
+                      runoff <- c(runoff, element);
+                    }
+                  }
+                                        # check that store is not empty
+                  if(sum(!kill)>0) {
+                    store <<- store[!kill];
+                  } else {
+                    store <<- list();
+                  }
+                  
+                  return(runoff);
+                });
+@
+
+Running the platform then involves polling $m$ participants for $n$ steps and cleaning the platform after each step.
+
+\index{Platform!run}
+<<>>=
+Platform$methods(
+                 run = function(n, m = 1) {
+                   log <- list(step = NULL, element = NULL);
+                   for(i in 1:n) {
+                     for(j in 1:m) {
+                       poll();
+                     }
+                     runoff <- clean();
+                     log$element <- c(log$element, runoff);
+                     log$step <- c(log$step, rep(i, length(runoff)));
+                   }
+                   invisible(log);
+                 }
+                 );
+@ 
+
+\subsection{Logging}
+
+The function \verb@wrap@ transforms the output from the platform runs into a format that can be exported to a file for external analysis via the function \verb@write.csv@.
+
+\index{wrap}
+<<wrap>>=
+wrap <- function(output) {
+  return(data.frame(step = output$step,
+                    threshold = sapply(output$element, 
+                      function(idea) { idea$maturity.threshold; }),
+                    status = sapply(output$element,
+                      function(idea) {idea$meta$author$com; }),
+                    openness.production = sapply(output$element,
+                      function(idea) {idea$meta$licence$openness.production()}),
+                    openness.diffusion = sapply(output$element,
+                      function(idea) {idea$meta$licence$openness.diffusion()})));
+}
+@ 
+
+In the context of a Kick Starter like platform for movie development, the output is what would be deposited in the Internet Archive.
+
+Sometimes it can also be important to trace what is happening inside the platform. The function \verb@trace.contributions@ can be called to trigger a notification for each contribution being made to the platform.
+
+ 
+\index{trace.contributions}
+<<>>=
+trace.contributions <- function(on = TRUE) {
+#  contribution <- function(value, aspects, items) {
+#    idea <- items[[which.max(value)]];
+#    
+#    list2string <- function(l, openb = "[", closeb = "]", sep=",") {
+#      return(paste(openb, paste(l, collapse = sep), closeb));
+#    }
+ #   
+ #   return(paste(sapply(aspects$factors, do.call, c(idea, aspects)),
+ # }
+  if(on) {
+    trace(generate.ideas, 
+          quote(cat(paste("Participant", parameters$id,"prefers "))),
+          print = FALSE);
+    trace(utility, 
+          quote(cat(unique.items[[which.max(evaluation)]]$desc(),"\n")),
+          at=6, print = FALSE); # which.max does not necessarily yield selection in case of ties 
+  } else {
+    untrace(utility);
+    untrace(generate.ideas);
+  }
+  invisible(on);
+}
+@
+
+
+This function calls the method \verb@desc@ of the class \verb@Idea@, which provides a short description for the idea, taking care of the special case when the idea selected is ``void''.
+\index{idea!desc}
+<<>>=
+Idea$methods(
+             desc = function() {
+               if(id=="void") {
+                 return("no idea");
+               } else {
+                 return(paste(ifelse(meta$public, "old", "new"),
+                              "idea", format(id, digits=3), 
+                              "with licence", meta$licence$type()));
+               }
+             });
+@
+
+
+
+The participants are identfied on the basis of the \verb@id@ string that can be added to the list of \verb@characteristics@ decribing a participant. For large numbers of participants it might be useful to generate the identifiers randomly. The function \verb@rname@ below allows one to do that.
+
+<<>>=
+rname <- function(prefix = "A", n = 6) {
+  name <- prefix;
+  vocals <- c("a", "e", "i", "o", "u", "y");
+  consonants <- setdiff(letters, vocals);
+  choose.vocal <- (tolower(substr(prefix, nchar(prefix), nchar(prefix)))
+                   %in% consonants);
+  
+  for(i in 1:n) {
+    if(choose.vocal) {
+      name <- paste(name, sample(vocals, 1, prob = c(1,1,1,1,1,.1)),
+                    sep="", collapse="");
+    } else {
+      name <- paste(name, sample(consonants, 1),
+                    sep="", collapse="");
+    }
+    choose.vocal <- !choose.vocal;
+  }
+  return(name);
+}
+@ 
+
+
+
+\section{Experimentation}
+
+
+
+\subsection{Repetition}
+
+<<>>=
+test <- function(platform, repeats = 10, ...) {
+  results <- data.frame();
+  output.length <- NULL;
+  for(try in 1:repeats) {
+    p <- platform$copy();
+    out <- wrap(p$run(...));
+    output.length <- c(output.length, nrow(out));
+    results <- rbind(results, out);
+  }
+
+  return(cbind(try=rep(1:repeats,output.length),
+               results));
+}
+
+@ 
+
+\section{Replication}
+The goal here is to find the range of parameters for which simulation runs of the model yield output that is similar to a target provided.
+
+Birattari
+
+
+Function that returns contingency table for licence type / status
+<<>>=
+wrap.table <- function(output) {
+  
+}
+@ 
+
+\section{Conclusion}
+
+\bibliography{120710}
+\bibliographystyle{apalike}
+
+\printindex
+\end{document}

@@ -1,0 +1,870 @@
+\documentclass{scrartcl}
+\usepackage{xcolor}
+\usepackage{textcomp}
+\begin{document}
+<<>>=
+Stangle("replication.Rnw");
+source("replication.R");
+@ 
+
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+<<2003>>=
+pop03 <- set.population(100,
+                        expand.grid(famous = c(TRUE, FALSE),
+                                    com = c(TRUE, FALSE),
+                                    maturity = 1:10),
+                        list(own,effort,notoriety,diffusion,control,
+                             status,skip),
+                        replace = TRUE);
+@ 
+=======
+<<2003>>=
+pop03 <- set.population(100,
+                        expand.grid(famous = c(TRUE, FALSE),
+                                    com = c(TRUE, FALSE),
+                                    maturity = 1:10),
+                        list(own,effort,notoriety,diffusion,control,
+                             status,skip),
+                        replace = TRUE);
+>>>>>>> External Changes
+=======
+<<2003>>=
+pop03 <- set.population(100,
+                        expand.grid(famous = c(TRUE, FALSE),
+                                    com = c(TRUE, FALSE),
+                                    maturity = 1:10),
+                        list(own,effort,notoriety,diffusion,control,
+                             status,skip),
+                        replace = TRUE);
+>>>>>>> External Changes
+=======
+<<2003>>=
+pop03 <- set.population(100,
+                        expand.grid(famous = c(TRUE, FALSE),
+                                    com = c(TRUE, FALSE),
+                                    maturity = 1:10),
+                        list(own,effort,notoriety,diffusion,control,
+                             status,skip),
+                        replace = TRUE);
+>>>>>>> External Changes
+=======
+<<2003>>=
+pop03 <- set.population(100,
+                        expand.grid(famous = c(TRUE, FALSE),
+                                    com = c(TRUE, FALSE),
+                                    maturity = 1:10),
+                        list(own,effort,notoriety,diffusion,control,
+                             status,skip),
+                        replace = TRUE);
+>>>>>>> External Changes
+=======
+<<2003>>=
+pop03 <- set.population(100,
+                        expand.grid(famous = c(TRUE, FALSE),
+                                    com = c(TRUE, FALSE),
+                                    maturity = 1:10),
+                        list(own,effort,notoriety,diffusion,control,
+                             status,skip),
+                        replace = TRUE);
+>>>>>>> External Changes
+=======
+<<2003>>=
+pop03 <- set.population(100,
+                        expand.grid(famous = c(TRUE, FALSE),
+                                    com = c(TRUE, FALSE),
+                                    maturity = 1:10),
+                        list(own,effort,notoriety,diffusion,control,
+                             status,skip),
+                        replace = TRUE);
+>>>>>>> External Changes
+=======
+<<2003>>=
+pop03 <- set.population(100,
+                        expand.grid(famous = c(TRUE, FALSE),
+                                    com = c(TRUE, FALSE),
+                                    maturity = 1:10),
+                        list(own,effort,notoriety,diffusion,control,
+                             status,skip),
+                        replace = TRUE);
+>>>>>>> External Changes
+=======
+<<2003>>=
+pop03 <- set.population(100,
+                        expand.grid(famous = c(TRUE, FALSE),
+                                    com = c(TRUE, FALSE),
+                                    maturity = 1:10),
+                        list(own,effort,notoriety,diffusion,control,
+                             status,skip),
+                        replace = TRUE);
+>>>>>>> External Changes
+=======
+<<2003>>=
+pop03 <- set.population(100,
+                        expand.grid(famous = c(TRUE, FALSE),
+                                    com = c(TRUE, FALSE),
+                                    maturity = 1:10),
+                        list(own,effort,notoriety,diffusion,control,
+                             status,skip),
+                        replace = TRUE);
+>>>>>>> External Changes
+=======
+<<2003>>=
+pop03 <- set.population(100,
+                        expand.grid(famous = c(TRUE, FALSE),
+                                    com = c(TRUE, FALSE),
+                                    maturity = 1:10),
+                        list(own,effort,notoriety,diffusion,control,
+                             status,skip),
+                        replace = TRUE);
+>>>>>>> External Changes
+=======
+<<2003>>=
+pop03 <- set.population(100,
+                        expand.grid(famous = c(TRUE, FALSE),
+                                    com = c(TRUE, FALSE),
+                                    maturity = 1:10),
+                        list(own,effort,notoriety,diffusion,control,
+                             status,skip),
+                        replace = TRUE);
+>>>>>>> External Changes
+=======
+<<2003>>=
+pop03 <- set.population(100,
+                        expand.grid(famous = c(TRUE, FALSE),
+                                    com = c(TRUE, FALSE),
+                                    maturity = 1:10),
+                        list(own,effort,notoriety,diffusion,control,
+                             status,skip),
+                        replace = TRUE);
+>>>>>>> External Changes
+=======
+<<2003>>=
+pop03 <- set.population(100,
+                        expand.grid(famous = c(TRUE, FALSE),
+                                    com = c(TRUE, FALSE),
+                                    maturity = 1:10),
+                        list(own,effort,notoriety,diffusion,control,
+                             status,skip),
+                        replace = TRUE);
+>>>>>>> External Changes
+=======
+<<2003>>=
+pop03 <- set.population(100,
+                        expand.grid(famous = c(TRUE, FALSE),
+                                    com = c(TRUE, FALSE),
+                                    maturity = 1:10),
+                        list(own,effort,notoriety,diffusion,control,
+                             status,skip),
+                        replace = TRUE);
+>>>>>>> External Changes
+=======
+<<2003>>=
+pop03 <- set.population(100,
+                        expand.grid(famous = c(TRUE, FALSE),
+                                    com = c(TRUE, FALSE),
+                                    maturity = 1:10),
+                        list(own,effort,notoriety,diffusion,control,
+                             status,skip),
+                        replace = TRUE);
+>>>>>>> External Changes
+=======
+<<2003>>=
+pop03 <- set.population(100,
+                        expand.grid(famous = c(TRUE, FALSE),
+                                    com = c(TRUE, FALSE),
+                                    maturity = 1:10),
+                        list(own,effort,notoriety,diffusion,control,
+                             status,skip),
+                        replace = TRUE);
+>>>>>>> External Changes
+=======
+<<2003>>=
+pop03 <- set.population(100,
+                        expand.grid(famous = c(TRUE, FALSE),
+                                    com = c(TRUE, FALSE),
+                                    maturity = 1:10),
+                        list(own,effort,notoriety,diffusion,control,
+                             status,skip),
+                        replace = TRUE);
+>>>>>>> External Changes
+
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+<<<<<<< Local Changes
+\end{document}
+=======
+sel03 <- run.irace(population = pop03);
+@ 
+
+\end{document}
+>>>>>>> External Changes
+=======
+sel03 <- run.irace(population = pop03);
+@ 
+
+<<2004>>=
+start.2004 <- instantiate.model(sel03, population = pop03);
+@ 
+
+\end{document}
+>>>>>>> External Changes
+=======
+sel03 <- run.irace(population = pop03);
+@ 
+
+<<2004>>=
+start.2004 <- instantiate.model(sel03, population = pop03);
+
+sel03 <- run.irance(population = pop03, store.base = get.stores(start.2004));
+@ 
+
+\end{document}
+>>>>>>> External Changes
+=======
+sel03 <- run.irace(population = pop03);
+@ 
+
+<<2004>>=
+start.2004 <- instantiate.model(sel03, population = pop03);
+
+sel03 <- run.irance(population = pop03, store.base = get.stores(start.2004));
+@ 
+
+\end{document}
+>>>>>>> External Changes
+=======
+sel03 <- run.irace(population = pop03);
+@ 
+
+<<2004>>=
+start.2004 <- instantiate.model(sel03, population = pop03);
+
+sel04 <- run.irance(population = pop03, store.base = get.stores(start.2004));
+@ 
+
+\end{document}
+>>>>>>> External Changes
+=======
+sel03 <- run.irace(population = pop03);
+@ 
+
+<<2004>>=
+start.2004 <- instantiate.model(sel03, population = pop03);
+
+sel04 <- run.irace(population = pop03, store.base = get.stores(start.2004),
+                   objective = c(1,1,2,0,8,0));
+@ 
+
+\end{document}
+>>>>>>> External Changes
+=======
+sel03 <- run.irace(population = pop03, budget = 2000);
+@ 
+
+<<2004>>=
+start.2004 <- instantiate.model(sel03, population = pop03);
+
+sel04 <- run.irace(population = pop03, store.base = get.stores(start.2004),
+                   objective = c(1,1,2,0,8,0), budget = 2000);
+@ 
+
+\end{document}
+>>>>>>> External Changes
+=======
+sel03 <- run.irace(population = pop03, budget = 2000);
+@ 
+
+<<2004>>=
+start.2004 <- instantiate.model(sel03, population = pop03);
+
+sel04 <- run.irace(population = pop03, store.base = get.stores(start.2004),
+                   objective = c(1,1,2,0,8,0), budget = 2000, 
+                   common.settings = "s \"\" i (10, 100)\nr \"\" i (10, 100)");
+@
+
+<<2006>>=
+sel06 <- run.irace(population = pop03, store.base = get.stores(start.2005),
+                   objective = c(1,1,2,0,8,0), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)"
+@ 
+
+\end{document}
+>>>>>>> External Changes
+=======
+sel03 <- run.irace(population = pop03, budget = 2000);
+@ 
+
+<<2004>>=
+start.2004 <- instantiate.model(sel03, population = pop03);
+
+sel04 <- run.irace(population = pop03, store.base = get.stores(start.2004),
+                   objective = c(1,1,2,0,8,0), budget = 2000, 
+                   common.settings = "s \"\" i (10, 100)\nr \"\" i (10, 100)");
+@
+
+<<2005>>=
+sel05 <- run.irace(population = pop03, 
+                   store.base = get.stores(instantiate.model(sel04, 
+                     population = pop03)),
+                   objective = c(1,1,2,0,8,0), budget = 2000, 
+                   common.settings = "s \"\" i (10, 100)\nr \"\" i (10, 100)"
+@ 
+
+<<2006>>=
+sel06 <- run.irace(population = pop03, 
+                   store.base = get.stores(instantiate.model(sel05, 
+                     population = pop03)),
+                   objective = c(1,1,2,0,8,0), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)"
+@
+
+<<2007>>=
+sel07 <- run.irace(population = pop03, 
+                   store.base = get.stores(instantiate.model(sel06, 
+                     population = pop03)),
+                   objective = c(1,1,2,0,8,0), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)"
+@
+
+<<2008>>=
+sel08 <- run.irace(population = pop03, 
+                   store.base = get.stores(instantiate.model(sel07, 
+                     population = pop03)),
+                   objective = c(1,1,2,0,8,0), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)"
+@
+
+<<2009>>=
+sel09 <- run.irace(population = pop03, 
+                   store.base = get.stores(instantiate.model(sel08, 
+                     population = pop03)),
+                   objective = c(1,1,2,0,8,0), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)"
+@
+
+
+\end{document}
+>>>>>>> External Changes
+=======
+sel03 <- run.irace(population = pop03, budget = 2000);
+@ 
+
+<<2004>>=
+start.2004 <- instantiate.model(sel03, population = pop03);
+
+sel04 <- run.irace(population = pop03, store.base = get.stores(start.2004),
+                   objective = c(1,1,2,0,8,0), budget = 2000, 
+                   common.settings = "s \"\" i (10, 100)\nr \"\" i (10, 100)");
+@
+
+<<2005>>=
+sel05 <- run.irace(population = pop03, 
+                   store.base = get.stores(instantiate.model(sel04, 
+                     population = pop03)),
+                   objective = c(0,6,3,0,14,1), budget = 2000, 
+                   common.settings = "s \"\" i (10, 100)\nr \"\" i (10, 100)"
+@ 
+
+<<2006>>=
+sel06 <- run.irace(population = pop03, 
+                   store.base = get.stores(instantiate.model(sel05, 
+                     population = pop03)),
+                   objective = c(0,19,29,0,8,7), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)"
+@
+
+<<2007>>=
+sel07 <- run.irace(population = pop03, 
+                   store.base = get.stores(instantiate.model(sel06, 
+                     population = pop03)),
+                   objective = c(0,15,56,0,11,18), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)"
+@
+
+<<2008>>=
+sel08 <- run.irace(population = pop03, 
+                   store.base = get.stores(instantiate.model(sel07, 
+                     population = pop03)),
+                   objective = c(0,9,45,0,19,23), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)"
+@
+
+<<2009>>=
+sel09 <- run.irace(population = pop03, 
+                   store.base = get.stores(instantiate.model(sel08, 
+                     population = pop03)),
+                   objective = c(0,14,49,0,19,13), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)"
+@
+
+
+\end{document}
+>>>>>>> External Changes
+=======
+sel03 <- run.irace(population = pop03, budget = 2000);
+@ 
+
+<<2004>>=
+start.2004 <- instantiate.model(sel03, population = pop03);
+
+sel04 <- run.irace(population = pop03, store.base = get.stores(start.2004),
+                   objective = c(1,1,2,0,8,0), budget = 2000, 
+                   common.settings = "s \"\" i (10, 100)\nr \"\" i (10, 100)");
+@
+
+<<2005>>=
+sel05 <- run.irace(population = pop03, 
+                   store.base = get.stores(instantiate.model(sel04, 
+                     population = pop03)),
+                   objective = c(0,6,3,0,14,1), budget = 2000, 
+                   common.settings = "s \"\" i (10, 100)\nr \"\" i (10, 100)"
+@ 
+
+<<2006>>=
+sel06 <- run.irace(population = pop03, 
+                   store.base = get.stores(instantiate.model(sel05, 
+                     population = pop03)),
+                   objective = c(0,19,29,0,8,7), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)"
+@
+
+<<2007>>=
+sel07 <- run.irace(population = pop03, 
+                   store.base = get.stores(instantiate.model(sel06, 
+                     population = pop03)),
+                   objective = c(0,15,56,0,11,18), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)"
+@
+
+<<2008>>=
+sel08 <- run.irace(population = pop03, 
+                   store.base = get.stores(instantiate.model(sel07, 
+                     population = pop03)),
+                   objective = c(0,9,45,0,19,23), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)"
+@
+
+<<2009>>=
+sel09 <- run.irace(population = pop03, 
+                   store.base = get.stores(instantiate.model(sel08, 
+                     population = pop03)),
+                   objective = c(0,14,49,0,19,13), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)"
+@
+
+
+\end{document}
+>>>>>>> External Changes
+=======
+sel03 <- run.irace(population = pop03, budget = 2000);
+@ 
+
+<<2004>>=
+start.2004 <- instantiate.model(sel03, population = pop03);
+instances.2004 <- get.stores(start.2004[sample(nrow(start.2004), 100, replace = TRUE),])
+sel04 <- run.irace(population = pop03, store.base = instances.2004,
+                   objective = c(1,1,2,0,8,0), budget = 2000, 
+                   common.settings = "s \"\" i (10, 100)\nr \"\" i (10, 100)");
+@
+
+<<2005>>=
+sel05 <- run.irace(population = pop03, 
+                   store.base = get.stores(instantiate.model(sel04, 
+                     population = pop03)),
+                   objective = c(0,6,3,0,14,1), budget = 2000, 
+                   common.settings = "s \"\" i (10, 100)\nr \"\" i (10, 100)"
+@ 
+
+<<2006>>=
+sel06 <- run.irace(population = pop03, 
+                   store.base = get.stores(instantiate.model(sel05, 
+                     population = pop03)),
+                   objective = c(0,19,29,0,8,7), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)"
+@
+
+<<2007>>=
+sel07 <- run.irace(population = pop03, 
+                   store.base = get.stores(instantiate.model(sel06, 
+                     population = pop03)),
+                   objective = c(0,15,56,0,11,18), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)"
+@
+
+<<2008>>=
+sel08 <- run.irace(population = pop03, 
+                   store.base = get.stores(instantiate.model(sel07, 
+                     population = pop03)),
+                   objective = c(0,9,45,0,19,23), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)"
+@
+
+<<2009>>=
+sel09 <- run.irace(population = pop03, 
+                   store.base = get.stores(instantiate.model(sel08, 
+                     population = pop03)),
+                   objective = c(0,14,49,0,19,13), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)"
+@
+
+
+\end{document}
+>>>>>>> External Changes
+=======
+sel03 <- run.irace(population = pop03, budget = 2000,
+                   common.settings = 
+                   "s \"\" i (10, 1000)\nr \"\" i (10, 100)");
+@ 
+
+<<2004>>=
+start.2004 <- instantiate.model(sel03, population = pop03);
+instances.2004 <- get.stores(start.2004[sample(nrow(start.2004), 
+                                               100, replace = TRUE),]);
+sel04 <- run.irace(population = pop03, store.base = instances.2004,
+                   objective = c(1,1,2,0,8,0), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)");
+@
+
+<<2005>>=
+instances.2005 <- get.stores(start.2004[sample(nrow(instantiate.model(sel04, 
+                                                                      population= pop03)), 
+                                               100, replace = TRUE),]);
+sel05 <- run.irace(population = pop03, 
+                   store.base = get.stores(ins),
+                   objective = c(0,6,3,0,14,1), budget = 2000, 
+                   common.settings = "s \"\" i (10, 100)\nr \"\" i (10, 100)");
+@ 
+
+<<2006>>=
+sel06 <- run.irace(population = pop03, 
+                   store.base = get.stores(instantiate.model(sel05, 
+                     population = pop03)),
+                   objective = c(0,19,29,0,8,7), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)");
+@
+
+<<2007>>=
+sel07 <- run.irace(population = pop03, 
+                   store.base = get.stores(instantiate.model(sel06, 
+                     population = pop03)),
+                   objective = c(0,15,56,0,11,18), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)"
+@
+
+<<2008>>=
+sel08 <- run.irace(population = pop03, 
+                   store.base = get.stores(instantiate.model(sel07, 
+                     population = pop03)),
+                   objective = c(0,9,45,0,19,23), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)"
+@
+
+<<2009>>=
+sel09 <- run.irace(population = pop03, 
+                   store.base = get.stores(instantiate.model(sel08, 
+                     population = pop03)),
+                   objective = c(0,14,49,0,19,13), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)"
+@
+
+
+\end{document}
+>>>>>>> External Changes
+=======
+sel03 <- run.irace(population = pop03, budget = 2000,
+                   common.settings = 
+                   "s \"\" i (10, 1000)\nr \"\" i (10, 100)");
+@ 
+
+<<2004>>=
+start.2004 <- instantiate.model(sel03[sample(nrow(sel03), 
+                                             100, replace = TRUE),], 
+                                population = pop03);
+instances.2004 <- get.stores(start.2004);
+sel04 <- run.irace(population = pop03, store.base = instances.2004,
+                   objective = c(1,1,2,0,8,0), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)");
+@
+
+<<2005>>=
+instances.2005 <- get.stores(start.2004[sample(nrow(instantiate.model(sel04, 
+                                                                      population= pop03)), 
+                                               100, replace = TRUE),]);
+sel05 <- run.irace(population = pop03, 
+                   store.base = get.stores(ins),
+                   objective = c(0,6,3,0,14,1), budget = 2000, 
+                   common.settings = "s \"\" i (10, 100)\nr \"\" i (10, 100)");
+@ 
+
+<<2006>>=
+sel06 <- run.irace(population = pop03, 
+                   store.base = get.stores(instantiate.model(sel05, 
+                     population = pop03)),
+                   objective = c(0,19,29,0,8,7), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)");
+@
+
+<<2007>>=
+sel07 <- run.irace(population = pop03, 
+                   store.base = get.stores(instantiate.model(sel06, 
+                     population = pop03)),
+                   objective = c(0,15,56,0,11,18), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)"
+@
+
+<<2008>>=
+sel08 <- run.irace(population = pop03, 
+                   store.base = get.stores(instantiate.model(sel07, 
+                     population = pop03)),
+                   objective = c(0,9,45,0,19,23), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)"
+@
+
+<<2009>>=
+sel09 <- run.irace(population = pop03, 
+                   store.base = get.stores(instantiate.model(sel08, 
+                     population = pop03)),
+                   objective = c(0,14,49,0,19,13), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)"
+@
+
+
+\end{document}
+>>>>>>> External Changes
+=======
+sel03 <- run.irace(population = pop03, budget = 2000,
+                   common.settings = 
+                   "s \"\" i (10, 1000)\nr \"\" i (10, 100)");
+@ 
+
+<<2004>>=
+start.2004 <- instantiate.model(sel03[sample(nrow(sel03), 
+                                             100, replace = TRUE),], 
+                                population = pop03);
+instances.2004 <- get.stores(start.2004);
+sel04 <- run.irace(population = pop03, store.base = instances.2004,
+                   objective = c(1,1,2,0,8,0), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)");
+@
+
+<<2005>>=
+start.2005 <- instantiate.model(sel03[sample(nrow(sel04), 
+                                             100, replace = TRUE),], 
+                                population = pop03);
+sel05 <- run.irace(population = pop03, 
+                   store.base = get.stores(start.2005),
+                   objective = c(0,6,3,0,14,1), budget = 2000, 
+                   common.settings = "s \"\" i (10, 100)\nr \"\" i (10, 100)");
+@ 
+
+<<2006>>=
+start.2006 <- instantiate.model(sel03[sample(nrow(sel05), 
+                                             100, replace = TRUE),], 
+                                population = pop03);
+sel06 <- run.irace(population = pop03, 
+                   store.base = get.stores(start.2006),
+                   objective = c(0,19,29,0,8,7), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)");
+@
+
+<<2007>>=
+start.2007 <- instantiate.model(sel03[sample(nrow(sel06), 
+                                             100, replace = TRUE),], 
+                                population = pop03);
+sel07 <- run.irace(population = pop03, 
+                   store.base = get.stores(start.2007),
+                   objective = c(0,15,56,0,11,18), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)"
+@
+
+<<2008>>=
+start.2008 <- instantiate.model(sel03[sample(nrow(sel07), 
+                                             100, replace = TRUE),], 
+                                population = pop03);
+sel08 <- run.irace(population = pop03, 
+                   store.base = get.stores(start.2008),
+                   objective = c(0,9,45,0,19,23), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)"
+@
+
+<<2009>>=
+start.2009 <- instantiate.model(sel03[sample(nrow(sel08), 
+                                             100, replace = TRUE),], 
+                                population = pop03);
+sel09 <- run.irace(population = pop03, 
+                   store.base = get.stores(start.2009),
+                   objective = c(0,14,49,0,19,13), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)"
+@
+
+
+\end{document}
+>>>>>>> External Changes
+=======
+sel03 <- run.irace(population = pop03, budget = 2000,
+                   common.settings = 
+                   "s \"\" i (10, 1000)\nr \"\" i (10, 100)");
+@ 
+
+<<2004>>=
+start.2004 <- instantiate.model(sel03[sample(nrow(sel03), 
+                                             100, replace = TRUE),], 
+                                population = pop03);
+instances.2004 <- get.stores(start.2004);
+sel04 <- run.irace(population = pop03, store.base = instances.2004,
+                   objective = c(1,1,2,0,8,0), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)");
+@
+
+<<2005>>=
+start.2005 <- instantiate.model(sel03[sample(nrow(sel04), 
+                                             100, replace = TRUE),], 
+                                population = pop03);
+sel05 <- run.irace(population = pop03, 
+                   store.base = get.stores(start.2005),
+                   objective = c(0,6,3,0,14,1), budget = 2000, 
+                   common.settings = "s \"\" i (10, 100)\nr \"\" i (10, 100)");
+@ 
+
+<<2006>>=
+start.2006 <- instantiate.model(sel03[sample(nrow(sel05), 
+                                             100, replace = TRUE),], 
+                                population = pop03);
+sel06 <- run.irace(population = pop03, 
+                   store.base = get.stores(start.2006),
+                   objective = c(0,19,29,0,8,7), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)");
+@
+
+<<2007>>=
+start.2007 <- instantiate.model(sel03[sample(nrow(sel06), 
+                                             100, replace = TRUE),], 
+                                population = pop03);
+sel07 <- run.irace(population = pop03, 
+                   store.base = get.stores(start.2007),
+                   objective = c(0,15,56,0,11,18), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)"
+@
+
+<<2008>>=
+start.2008 <- instantiate.model(sel03[sample(nrow(sel07), 
+                                             100, replace = TRUE),], 
+                                population = pop03);
+sel08 <- run.irace(population = pop03, 
+                   store.base = get.stores(start.2008),
+                   objective = c(0,9,45,0,19,23), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)"
+@
+
+<<2009>>=
+start.2009 <- instantiate.model(sel03[sample(nrow(sel08), 
+                                             100, replace = TRUE),], 
+                                population = pop03);
+sel09 <- run.irace(population = pop03, 
+                   store.base = get.stores(start.2009),
+                   objective = c(0,14,49,0,19,13), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)"
+@
+
+
+\end{document}
+>>>>>>> External Changes
+=======
+sel03 <- run.irace(population = pop03, budget = 2000,
+                   common.settings = 
+                   "s \"\" i (10, 1000)\nr \"\" i (10, 100)");
+@ 
+
+<<2004>>=
+start.2004 <- instantiate.model(sel03[sample(nrow(sel03), 
+                                             100, replace = TRUE),], 
+                                population = pop03);
+instances.2004 <- get.stores(start.2004);
+sel04 <- run.irace(population = pop03, store.base = instances.2004,
+                   objective = c(1,1,2,0,8,0), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)");
+@
+
+<<2005>>=
+start.2005 <- instantiate.model(sel03[sample(nrow(sel04), 
+                                             100, replace = TRUE),], 
+                                population = pop03);
+sel05 <- run.irace(population = pop03, 
+                   store.base = get.stores(start.2005),
+                   objective = c(0,6,3,0,14,1), budget = 2000, 
+                   common.settings = "s \"\" i (10, 100)\nr \"\" i (10, 100)");
+@ 
+
+<<2006>>=
+start.2006 <- instantiate.model(sel03[sample(nrow(sel05), 
+                                             100, replace = TRUE),], 
+                                population = pop03);
+sel06 <- run.irace(population = pop03, 
+                   store.base = get.stores(start.2006),
+                   objective = c(0,19,29,0,8,7), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)");
+@
+
+<<2007>>=
+start.2007 <- instantiate.model(sel03[sample(nrow(sel06), 
+                                             100, replace = TRUE),], 
+                                population = pop03);
+sel07 <- run.irace(population = pop03, 
+                   store.base = get.stores(start.2007),
+                   objective = c(0,15,56,0,11,18), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)");
+@
+
+<<2008>>=
+start.2008 <- instantiate.model(sel03[sample(nrow(sel07), 
+                                             100, replace = TRUE),], 
+                                population = pop03);
+sel08 <- run.irace(population = pop03, 
+                   store.base = get.stores(start.2008),
+                   objective = c(0,9,45,0,19,23), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)");
+@
+
+<<2009>>=
+start.2009 <- instantiate.model(sel03[sample(nrow(sel08), 
+                                             100, replace = TRUE),], 
+                                population = pop03);
+sel09 <- run.irace(population = pop03, 
+                   store.base = get.stores(start.2009),
+                   objective = c(0,14,49,0,19,13), budget = 2000, 
+                   common.settings = "s \"\" i (10, 1000)\nr \"\" i (10, 100)");
+@
+
+
+\end{document}
+>>>>>>> External Changes

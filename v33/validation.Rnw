@@ -1,0 +1,239 @@
+\documentclass{scrartcl}
+
+\usepackage{url}
+\usepackage{makeidx}
+\usepackage{longtable}
+\usepackage{natbib}
+\usepackage{amsmath, amsfonts, amssymb,}
+\usepackage[english]{babel}
+
+
+\begin{document}
+
+
+\section{Recuperation}
+
+The results of \verb@iRace@ can be stored in a log file. In order to access this file, the function \verb@load(log)@ yields an object \verb@tunerResults@ which can be inspected further.
+
+
+\section{Logging}
+The function \verb@wrap@ transforms the output from the platform runs into a format that can be exported to a file for external analysis via the function \verb@write.csv@.
+
+\index{wrap}
+<<wrap>>=
+wrap <- function(output) {
+  return(data.frame(step = output$step,
+                    threshold = sapply(output$element, 
+                      function(idea) { idea$maturity.threshold; }),
+                    status = sapply(output$element,
+                      function(idea) {idea$meta$author$com; }),
+                    openness.production = sapply(output$element,
+                      function(idea) {idea$meta$licence$openness.production()}),
+                    openness.diffusion = sapply(output$element,
+                      function(idea) {idea$meta$licence$openness.diffusion()})));
+}
+@ 
+
+In the context of a Kick Starter like platform for movie development, the output is what would be deposited in the Internet Archive.
+
+Sometimes it can also be important to trace what is happening inside the platform. The function \verb@trace.contributions@ can be called to trigger a notification for each contribution being made to the platform.
+
+ 
+\index{trace.contributions}
+<<>>=
+trace.contributions <- function(on = TRUE) {
+#  contribution <- function(value, aspects, items) {
+#    idea <- items[[which.max(value)]];
+#    
+#    list2string <- function(l, openb = "[", closeb = "]", sep=",") {
+#      return(paste(openb, paste(l, collapse = sep), closeb));
+#    }
+ #   
+ #   return(paste(sapply(aspects$factors, do.call, c(idea, aspects)),
+ # }
+  if(on) {
+    trace(generate.ideas, 
+          quote(cat(paste("Participant", parameters$id,"prefers "))),
+          print = FALSE);
+    trace(utility, 
+          quote(cat(unique.items[[which.max(evaluation)]]$desc(),"\n")),
+          at=6, print = FALSE); # which.max does not necessarily yield selection in case of ties 
+  } else {
+    untrace(utility);
+    untrace(generate.ideas);
+  }
+  invisible(on);
+}
+@
+
+
+
+
+
+The participants are identfied on the basis of the \verb@id@ string that can be added to the list of \verb@characteristics@ decribing a participant. For large numbers of participants it might be useful to generate the identifiers randomly. The function \verb@rname@ below allows one to do that.
+
+<<>>=
+rname <- function(prefix = "A", n = 6) {
+  name <- prefix;
+  vocals <- c("a", "e", "i", "o", "u", "y");
+  consonants <- setdiff(letters, vocals);
+  choose.vocal <- (tolower(substr(prefix, nchar(prefix), nchar(prefix)))
+                   %in% consonants);
+  
+  for(i in 1:n) {
+    if(choose.vocal) {
+      name <- paste(name, sample(vocals, 1, prob = c(1,1,1,1,1,.1)),
+                    sep="", collapse="");
+    } else {
+      name <- paste(name, sample(consonants, 1),
+                    sep="", collapse="");
+    }
+    choose.vocal <- !choose.vocal;
+  }
+  return(name);
+}
+@ 
+
+\section{Inspect the model}
+
+\subparagraph{Demography}
+In order to retrieve the weights of a model instance it suffices to look at how its population is specified.
+<<>>=
+get.weights <- function(instance) {
+  return(sapply(instance$population, 
+                function(i) i$preferences$a));
+}
+@ 
+
+As in
+<<eval=false>>=
+get.weights(test.instances[[1]]);
+@ 
+
+The characteristics are retrieved in a similar fashion.
+<<>>=
+get.characteristics <- function(instance) {
+  return(sapply(instance$population, function(i) i$characteristics));
+}
+@ 
+
+\subparagraph{Other stuff}
+How many ideas in store:
+<<>>=
+get.size <- function(instance) {
+  return(length(instance$store));
+}
+@ 
+
+\section{Monte Carlo}
+
+<<>>=
+test <- function(platform, repeats = 10, ...) {
+  results <- data.frame();
+  output.length <- NULL;
+  for(try in 1:repeats) {
+    p <- platform$copy();
+    out <- wrap(p$run(...));
+    output.length <- c(output.length, nrow(out));
+    results <- rbind(results, out);
+  }
+
+  return(cbind(try=rep(1:repeats,output.length),
+               results));
+}
+
+@ 
+ 
+
+
+\section{capita selecta}
+Redefine the function \verb@wrap@ in order to display the information of interest.
+<<>>=
+wrap <- function(output, 
+                 licence.types = sapply(available.licences, 
+                   function(x) x$type())) {
+  if(length(output$step) > 0) {
+    return(summary(factor(sapply(output$element, 
+                                 function(x) {
+                                   x$meta$licence$type();
+                                 }), levels = licence.types)));
+  } else {
+    invisible(numeric(length(licence.types)));
+  }
+}
+@ 
+
+We can do something more fancy as well:
+
+<<>>=
+# TODO: would be nice if model output included a model summary
+table.wrap <- function(output,
+                       exclude.zero = TRUE,
+                       licence.types = sapply(available.licences, 
+                         function(x) x$type())) {
+  
+  if(length(output$step) > 0) {
+    licences <- factor(sapply(output$element,
+                              function(x) {
+                                x$meta$licence$type();
+                              }), 
+                       levels = licence.types);
+    authors <- factor(sapply(output$element,
+                             function(x) {
+                               x$meta$author$id;
+                             }));
+    if(exclude.zero) {
+      return(table(licences, authors, 
+                   exclude = names(which(summary(licences)==0))));
+    } else {
+      return(table(licences, authors)); 
+    }
+  } else {
+    return(NA);
+  }
+}
+@
+ 
+
+The function \verb@wrap@ transforms the output of the model run into a count of mature ideas per licence.
+
+In order to test the model slightly more rigorously we repeat the simulation run several times. The function \verb@test@ runs the simulation for a specified number of times (10 by default). Before each run the platform store of ideas is returned to its initial state.
+<<>>=
+test <- function(platform, steps, times = 10, initial.store = list()) {
+  return(sapply(1:times,
+                function(i) {
+                  platform$store <- initial.store;
+                  return(wrap(platform$run(steps)));
+                }));
+}
+@
+
+
+<<eval=FALSE>>=
+mc1 <- test(platform=m1, steps=test1$s[1], times=10, 
+            initial.store = m1$store,
+            participant.names = names(m1$population));
+			
+# to latex
+print(xtable(t(mc1), floating=FALSE, file="mc1.tex"));
+@ 
+
+\begin{table}
+  \caption{Ideas produced per participant}
+  \input{mc1}
+\end{table}
+
+For further analysis we save the model output to a \verb@csv@ file.
+<<>>=
+write.model.results <- function(test.results, model, ...) {
+  write.csv(cbind(t(sapply(model$population, function(a) c(unlist(a$characteristics), a$preferences$a))), test.results), ...);
+}
+@ 
+
+as in
+<<eval=FALSE>>=
+write.model.results(mc1, m1, file="mc1.csv");
+@ 
+
+
+\end{document}

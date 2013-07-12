@@ -1,0 +1,254 @@
+\documentclass{scrartcl}
+\usepackage{makeidx}
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+
+\makeindex
+\title{Model calibration}
+% see: /Library/Frameworks/R.framework/Versions/2.15/Resources/library/irace/templates
+\begin{document}
+
+\section{Introduction}
+The goal of model calibration is to find the model parameters that yield an outcome close to the one observed in the benchmark. The method we use for calibration is ``iterated racing'' \cite{irace}. Iterated racing is a method for sequential selection which gradually eliminates candidate parameter settings that consistently underperform with regards to alternatives.
+
+<<>>=
+require(irace);
+@
+
+\section{Setup}
+
+
+The main function \verb@irace@ is a function with two arguments.
+<<>>=
+args(irace);
+@ 
+
+Both arguments are lists. The first list contains the information to configure \verb@irace@ and the second list contains the information needed to distinguish among candidate models, the parameter space.
+
+\subsection{Model instantiation}
+
+Before \verb@irace@ can be run, we first need to create the base model with its participants. For this, we need to specify the number of participants required, the possible characteristics that these participants can have, and the list of idea components that the participants take into consideration. In addition one can specify the details governing the sample of the characteristics. See \verb@?sample@.
+
+<<>>=
+set.population <- function(n,
+                           character = expand.grid(
+                             famous = c(TRUE, FALSE),
+                             com = c(TRUE, FALSE),
+                             maturity = 1:10),
+                           components = list(notoriety, effort, diffusion, 
+                             public, own, control), ...) {
+  m <- length(components);
+  
+  crowd <- gen(Participant, n, 
+               characteristics = list(famous = TRUE,
+                 com = TRUE, rationality = 100, maturity = 1),
+               preferences = list(factors = components,
+                 a = rep(1/m, m)));
+  
+  character.space <- 1:nrow(character);
+  demographics <- sample(character.space, n, ...);
+  
+  for(i in 1:n) {
+    spec <- character[demographics[i],];
+    crowd[[i]]$characteristics[names(spec)] <- spec;
+  }
+  return(crowd);
+}
+@ 
+
+ it might be nice to generate instances on the basis of the scenarios extracted from earlier runs of \verb@irace@. We can redefine the function \verb@set.store@ to make this possible.
+
+<<>>=
+set.store <- function(store.id = 1, scenarii = scenari1) {
+  if(store.id == "empty") {
+    return(list());
+  } else {
+    if(store.id =="random") {
+      return(scenarii[[sample(length(scenarii), 1)]]$store);
+    } else {
+      return(scenarii[[store.id]]$store)
+    } 
+  }
+}
+@ 
+
+In the implementation above there is a list of scenarios provided by the second argument from which the scenario with the label or sequence number given by the first argument is taken to provide the initial platform store. In addition, one can specify the store to be ``empty'' or one can randomly pick one of the scenarios listed in the second argument.
+
+Note that the function \verb@run.irace@ accepts a list of instances as well as input argument. The function \verb@get.stores@ retrieves an array of platform stores from a list of model instances.
+
+<<>>=
+get.stores <- function(instances) {
+  return(lapply(instances, function(i) i$store));
+}
+@ 
+
+\subsection{Less specific parameters}
+
+We want to be able to tell \verb@irace@ about the models to be explored in more general terms. That is, we want to be able to specify a population size, indicate the characteristics of the members of that population and provide of list of factors that these members take into account when they decide to contribute (or not) to a given idea. We leave it to \verb@irace@ to choose the weights associated with each factor for each member.
+
+The first step is to specify the parameter space for a population of size $n$ which considers $m$ factors in the utility function. The range of values that \verb@irace@ is asked to explore is the same for each weight (by default, a number between $0$ and $1$).
+
+<<>>=
+expand.parameters <- function(n, m, bounds = "r (0, 1)") {
+  par <- expand.grid(p = 1:n, a = 1:m);
+  return(paste(paste("p", par$p, "a", par$a, sep=""), "\"\"", bounds,
+               collapse="\n"));
+}
+@ 
+
+There are also settings, which we can ask \verb@irace@ to explore, which are the same for each member of the population or specify global characteristics of the model. In order to set the parameters we append these to the parameters to be expanded.
+<<>>=
+set.parameters <- function(n, m, common.settings = "s \"\" i (10, 100)\nr \"\" i (10, 100)", ...) {
+  return(readParameters(text=paste(expand.parameters(n, m, ...), 
+                          common.settings, 
+                          sep = "\n")));
+}
+@ 
+
+\subsection{Tuner Configuration}
+The configuration of \verb@irace@ can be amended in 30 (!) ways, which are listed by the function \verb@defaultConfiguration@. The most important among these are \verb@hookRun@, \verb@instances@, \verb@maxExperiments@, and \verb@logFile@.
+
+% copy pasted from /Library/Frameworks/R.framework/Versions/2.15/Resources/library/irace/templates
+\begin{description}
+\item[\verb@hookRun@] The script [or function] called for each candidate that launches the program to be tuned.  
+\item[\verb@instances@] In our case: the initial state of the model.
+\item[\verb@maxExperiments@] The maximum number of runs (invocations of hookRun) that will performed. It determines the (maximum) budget of experiments for the tuning, unless \verb@timeBudget@ is positive.
+\item[\verb@logFile@] File to save tuning results as an R dataset.
+\end{description}
+
+The function \verb@evaluate@ compare the model output to a target specified by the data in the Internet Archive.
+
+<<>>=
+evaluate <- function(output, target = c(0, 2, 1, 0, 0, 0)) {
+  precis <- function(list, fun, levels) {
+    return(summary(factor(sapply(list, fun), levels = levels)));
+  }
+  my.openness <- function(x) {
+    return(x$meta$licence$openness.production());
+  }
+  
+  output.status <- precis(output$element, status, 1:2);
+  output.openness <- precis(output$element, my.openness, 1:3);
+  
+  target.status <- sapply(split(target, ceiling(1:6/3)), sum);
+  target.openness <- sapply(split(target, rep(1:3, 2)), sum);
+  
+  
+  return(sum(abs(target.openness - output.openness)) +
+         sum(abs(target.status - output.status)));
+}
+@ 
+
+Awaiting a better documentation and implementation of \verb@irace@ we'll have to use an ugly hack and pass extra information through \verb@extra.params@. The extra information in the function below is the function used for evaluation. If the information is missing, just the model will be returned without evaluation.
+
+<<>>=
+hook.run.extra <- function(instance, candidate, 
+                           extra.params = list(eval = evaluate, 
+                             target = c(0, 2, 1, 0, 0, 0),
+                             population = set.population(10)), 
+                           config = list()) {
+  # create platform
+  my.platform <- Platform$new();
+  my.platform$population <- extra.params$population;
+
+  # check that the correct number of participants is on the platform
+  n <- length(my.platform$population);
+  ng <- names(candidate$values[grep("p[0-9]+a[0-9]+", 
+                                    names(candidate$values))]);
+  np <- length(unique(sub("a[0-9]+", "", ng)));
+  stopifnot(n == np);
+  
+  # retrieve the number of factors to be considered
+  m <- length(unique(sub("p[0-9]+", "", ng)));
+  # check that this corresponds to the number of factors considered
+  for(i in 1:n) {
+   stopifnot(m == length(my.platform$population[[i]]$preferences$factors)); 
+  }
+  
+  # set preferences and characteristics for each member of the population.
+  for(i in 1:n) {
+    my.platform$population[[i]]$characteristics$rationality <- 
+      as.numeric(candidate$values[["r"]]);
+
+    a <- numeric(m);
+    # retrieve weights
+    for(j in 1:m) {
+      a[j] <- as.numeric(candidate$values[[paste("p", i, "a", j, sep="")]]);
+    }
+    # normalize weights
+    a <- a/sum(a);
+    # set weights
+    my.platform$population[[i]]$preferences$a <- a;
+  }
+  
+  # seed the platform with ideas (if any)
+  my.platform$store <- instance;
+  
+  # run the platform the required number of steps
+  pout <- my.platform$run(as.numeric(candidate$values[["s"]]));
+  
+  if(is.null(extra.params$eval)) { 
+    # no eval function specified
+    # return the model rather than the evaluation
+    return(my.platform$copy());
+  } else {
+    # evaluate the model
+    return(extra.params$eval(pout, extra.params$target));
+  }
+}
+@ 
+
+In order to make sure that the population used in iRace is the same as the population used afterwards the population is specified separately (and so we need to adapt the function \verb@run.irace@.
+
+
+<<>>=
+run.irace <- function(population = set.population(10), 
+                      n.instances = 100,
+                      hook.fun = hook.run.extra,
+                      budget = 1000,
+                      log.file = "",
+                      hook.eval = evaluate,
+                      objective = c(0, 2, 1, 0, 0, 0),
+                      store.base = list(set.store("empty")),
+                      parallel = 1,
+                      ...) {
+  my.instances <- store.base;
+  if(length(my.instances) < n.instances) {
+    my.instances <- sample(store.base, n.instances,
+                           replace = TRUE);
+  } else {
+    if(length(my.instances)> n.instances) {
+      my.instances <- my.instances[1:n.instances];
+    }
+  }
+
+  return(irace(tunerConfig = list(
+                 hookRun = hook.fun,
+                 instances = my.instances,
+                 maxExperiments = budget,
+                 instances.extra.params = lapply(1:n.instances, 
+                   function(x) 
+                   list(eval = hook.eval,
+                        target = objective,
+                        population = population)),
+                 logFile = log.file,
+                 parallel = parallel),
+               parameters = set.parameters(length(population), 
+                 length(population[[1]]$preferences$a),
+                 ...)));
+}
+@ 
+
+
+
+\section{Interface}
+
+
+\section{Execution}
+
+\section{Conclusion}
+
+\bibliography{120710}
+\bibliographystyle{apalike}
+
+\end{document}
